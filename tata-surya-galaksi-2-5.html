@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifaldhi Astra</title>
+    
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050508; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        #dasbor-kiri {
+            position: absolute; top: 15px; left: 15px; z-index: 10; max-width: 340px;
+            display: flex; flex-direction: column; gap: 10px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #dasbor-toggle {
+            position: absolute; top: 15px; left: 15px; z-index: 11; cursor: pointer;
+            background: rgba(0,0,0,0.85); color: #f5e6f5; border: 1px solid rgba(130,100,255,0.4);
+            border-radius: 10px; padding: 9px 13px; font-size: 15px; font-family: inherit;
+            line-height: 1; user-select: none;
+        }
+        #dasbor-toggle:hover { background: rgba(138,43,226,0.35); }
+        #dasbor-toggle .label { font-size: 11px; margin-left: 6px; vertical-align: 1px; }
+
+        /* mode: penuh (default) */
+        #dasbor-kiri.penuh #dasbor-toggle { position: static; }
+
+        /* mode: ringkas -> hanya judul singkat + tombol, sisanya disembunyikan */
+        #dasbor-kiri.ringkas #info .isi-lengkap,
+        #dasbor-kiri.ringkas #legenda { display: none; }
+        #dasbor-kiri.ringkas #info { padding: 10px 16px; }
+        #dasbor-kiri.ringkas #dasbor-toggle { position: static; }
+
+        /* mode: tersembunyi -> hanya tombol bulat kecil yang tampak, panel lain hilang total */
+        #dasbor-kiri.sembunyi #info,
+        #dasbor-kiri.sembunyi #legenda { display: none; }
+        #dasbor-kiri.sembunyi { gap: 0; }
+
+        #info {
+            color: white; background: rgba(0, 0, 0, 0.85);
+            padding: 15px 22px; border-radius: 10px; pointer-events: none; font-size: 13px;
+            border: 1px solid rgba(130, 100, 255, 0.4); line-height: 1.55;
+        }
+        #info h3 { margin: 0 0 8px 0; }
+        #info .catatan { color: #a9a9c2; font-size: 11.5px; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px; }
+
+        #legenda {
+            color: white; background: rgba(0, 0, 0, 0.85);
+            padding: 12px 18px; border-radius: 10px; pointer-events: none; font-size: 12px;
+            border: 1px solid rgba(130, 100, 255, 0.4); line-height: 1.9;
+        }
+        #legenda span { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+
+        #side-panel {
+            position: absolute; top: 0; right: -420px; width: 380px; height: 100vh;
+            background: rgba(8, 12, 25, 0.96); border-left: 2px solid #8a2be2;
+            color: white; padding: 30px 25px; box-sizing: border-box; transition: right 0.4s ease;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.8); overflow-y: auto; z-index: 100;
+        }
+        #side-panel.active { right: 0; }
+        
+        #sp-title { font-size: 22px; color: #da70d6; margin: 0 0 5px 0; font-weight: bold; }
+        #sp-subtitle { font-size: 13px; color: #a9a9c2; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sp-section { margin-bottom: 18px; }
+        .sp-label { font-size: 12px; color: #da70d6; font-weight: bold; margin-bottom: 5px; text-transform: uppercase;}
+        .sp-text { font-size: 14px; line-height: 1.6; color: #e0e6ed; margin: 0; }
+        .sp-fact { background: rgba(218, 112, 214, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #da70d6; font-size: 13.5px; line-height: 1.5; color: #f5e6f5;}
+        .sp-data { background: rgba(100, 150, 255, 0.08); padding: 12px 15px; border-radius: 8px; font-size: 13px; line-height: 1.8; color: #cfe0ff; }
+        .sp-sumber { font-size: 11px; color: #7d7d9e; margin-top: 6px; font-style: italic; }
+
+        #close-btn {
+            position: absolute; top: 15px; right: 20px; cursor: pointer; color: #aaa;
+            font-size: 24px; font-weight: bold; background: none; border: none;
+        }
+        #close-btn:hover { color: white; }
+
+        #reset-view-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 10; cursor: pointer;
+            background: rgba(0,0,0,0.85); color: #f5e6f5; border: 1px solid rgba(130,100,255,0.4);
+            border-radius: 10px; padding: 10px 16px; font-size: 13px; font-family: inherit;
+        }
+        #reset-view-btn:hover { background: rgba(138,43,226,0.35); }
+    </style>
+</head>
+<body>
+
+    <div id="dasbor-kiri" class="penuh">
+        <button id="dasbor-toggle" title="Lipat / sederhanakan dasbor">☰<span class="label">Dasbor</span></button>
+        <div id="info">
+            <h3>🌌 Ensiklopedia Tata Surya & Galaksi Bima Sakti</h3>
+            <div class="isi-lengkap">
+            <p>• <b>KLIK</b> planet, bulan, satelit/wahana buatan, asteroid (500+), komet, bintang, eksoplanet, gugus bintang, nebula, bintang neutron (pulsar), lubang hitam, atau galaksi (Bima Sakti/Andromeda & katai pendampingnya) untuk <b>terbang &amp; zoom otomatis</b> ke objek itu sekaligus melihat detailnya.<br>
+            • Kamera <b>tidak terpaku pada Matahari</b> — setelah zoom ke suatu objek, geser mouse untuk berputar bebas mengelilinginya, scroll untuk zoom manual, atau tekan tombol <b>🏠 Kembali ke Tata Surya</b> di kanan atas untuk kembali ke tampilan awal.<br>
+            • Zoom out jauh untuk melihat 12 sistem bintang tetangga, gugus bintang, nebula, penanda "Lokasi Tata Surya", Sagittarius A* di <b>pusat sebenarnya</b> Galaksi, seluruh struktur spiral Bima Sakti, dan Galaksi Andromeda (M31) beserta galaksi katai pendampingnya jauh di kejauhan.<br>
+            • <b>Catatan posisi:</b> sesuai data NASA/ESA Gaia, Tata Surya kita <b>bukan</b> berada di pusat Bima Sakti — kita terletak ≈26.000 tahun cahaya dari pusat galaksi (Sagittarius A*), di pinggiran kecil bernama Lengan/Taji Orion (Orion Arm/Spur), di antara Lengan Sagitarius dan Lengan Perseus.<br>
+            • Struktur Bima Sakti kini dimodelkan lebih menyerupai bentuk aslinya: <b>palang (bar)</b> tengah, dua lengan spiral utama (Perseus & Scutum-Centaurus), dua lengan minor (Sagitarius & Norma), piringan difus bintang tua pengisi celah antar-lengan, serta halo bintang tua berisi gumpalan menyerupai gugus bola — mengacu pada ilustrasi struktur NASA/JPL-Caltech dan animasi pemetaan bintang <b>ESA Gaia</b>. Galaksi Andromeda juga diberi kedalaman volumetrik serupa (skala lebih kecil) agar tidak lagi tampak sekadar gambar datar.<br>
+            • Pola rasi bintang (kubah langit) untuk sementara dinonaktifkan agar fokus pengembangan diarahkan ke penambahan benda langit & perbaikan posisi galaksi.</p>
+            <div class="catatan">Berisi Tata Surya kita (planet dengan orbit revolusi masing-masing) + 12 sistem bintang asing nyata (Alpha Centauri, Proxima Centauri, Barnard's Star, Sirius, Wolf 359, 51 Pegasi, TRAPPIST-1, HD 209458, TOI-700, Kepler-186, Kepler-452, Tau Ceti, Gliese 581, Upsilon Andromedae) beserta eksoplanetnya yang masing-masing mengorbit bintang induknya sendiri; 16 bintang terang latar (Betelgeuse, Rigel, Vega, Polaris, Arcturus, Antares, Procyon, Altair, Aldebaran, Spica, Pollux, Capella, Fomalhaut, Deneb, Canopus, Achernar); wahana antariksa NASA (Voyager 1 & 2, New Horizons, Parker Solar Probe, Cassini, Juno, Pioneer 10/11, Europa Clipper, Perseverance, Hubble, JWST, Chandra, TESS); 500+ asteroid beraneka tipe spektral (C/S/M/V-type); komet & objek antarbintang; gugus bintang terbuka & globular; nebula emisi/planeter/sisa supernova/gelap; bintang neutron (pulsar); lubang hitam Sagittarius A* di pusat galaksi sebenarnya; debu & gas kosmik antarbintang; visual fotografis Galaksi Bima Sakti bergaya foto astronomi lengkap dengan galaksi katai pendamping Awan Magellan Besar & Kecil; serta Galaksi Andromeda (M31) beserta galaksi katai pendamping M32 & M110 — jarak dan posisi berdasarkan data NASA Exoplanet Archive/JPL/SIMBAD/Gaia, divisualkan dengan skala yang dipadatkan agar tetap terlihat dalam satu layar namun tetap proporsional (Matahari diposisikan di pinggiran cakram galaksi, bukan di pusatnya).</div>
+            </div>
+        </div>
+
+        <div id="legenda">
+            <div><span style="background:#ffea00"></span>Planet & Bulan Alami</div>
+            <div><span style="background:#66d9ef"></span>Satelit & Wahana Buatan Manusia</div>
+            <div><span style="background:#dda0dd"></span>Eksoplanet Terkonfirmasi (NASA)</div>
+            <div><span style="background:#ff9933"></span>Bintang di Sistem Lain</div>
+            <div><span style="background:#8a7a6a"></span>Komet, Asteroid (500+) & Objek Antarbintang</div>
+            <div><span style="background:#bcd8ff"></span>Gugus Bintang & Nebula</div>
+            <div><span style="background:#ff8855"></span>Bintang Neutron (Pulsar) & Lubang Hitam</div>
+            <div><span style="background:#ffffff"></span>Penanda "Lokasi Tata Surya" (≈26.000 ly dari Pusat)</div>
+            <div><span style="background:#333344"></span>Kerangka & Starfield Galaksi Bima Sakti</div>
+            <div><span style="background:#ffd9a0"></span>Visual Galaksi Bima Sakti, Andromeda (M31) & Katai Pendamping</div>
+        </div>
+    </div>
+
+    <button id="reset-view-btn">🏠 Kembali ke Tata Surya</button>
+
+    <div id="side-panel">
+        <button id="close-btn">&times;</button>
+        <h2 id="sp-title">Nama Objek</h2>
+        <div id="sp-subtitle">Tipe Objek</div>
+        
+        <div class="sp-section">
+            <div class="sp-label">Definisi</div>
+            <p class="sp-text" id="sp-desc">-</p>
+        </div>
+
+        <div class="sp-section" id="sp-data-section">
+            <div class="sp-label">Data Kunci</div>
+            <div class="sp-data" id="sp-data">-</div>
+        </div>
+        
+        <div class="sp-section">
+            <div class="sp-label">Fakta Unik</div>
+            <div class="sp-fact" id="sp-fact">-</div>
+            <div class="sp-sumber" id="sp-sumber"></div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://esm.sh/three@0.158.0",
+                "three/addons/": "https://esm.sh/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020205);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 45000);
+        camera.position.set(0, 120, 260);
+        const POSISI_KAMERA_AWAL = camera.position.clone();
+        const TARGET_KAMERA_AWAL = new THREE.Vector3(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.outputColorSpace = THREE.SRGBColorSpace; 
+        document.body.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 1.5)); 
+        scene.add(new THREE.PointLight(0xffffff, 2.0, 3000)); 
+
+        const objekInteraktif = [];
+
+        // ==========================================
+        // DATABASE ENSIKLOPEDIA - BENDA UTAMA TATA SURYA & BINTANG TETANGGA
+        // ==========================================
+        const dbSemesta = {
+            "Matahari": {
+                tipe: "Bintang Utama (Katai Kuning, kelas G2V)",
+                desc: "Pusat tata surya yang menahan seluruh planet, bulan, dan asteroid dengan gravitasinya. Energinya berasal dari reaksi fusi nuklir hidrogen menjadi helium di intinya.",
+                fakta: "Menyumbang 99,8% massa total Tata Surya, dengan diameter sekitar 1.392.000 km (109 kali Bumi) dan suhu permukaan sekitar 5.500°C.",
+                data: { "Diameter": "≈1.392.000 km", "Suhu permukaan": "≈5.500 °C", "Usia": "≈4,6 miliar tahun" }
+            },
+            "Alpha Centauri A": {
+                tipe: "Bintang Utama (Deret Utama Kelas G)",
+                desc: "Komponen terbesar dalam sistem bintang ganda Alpha Centauri, sangat mirip dengan Matahari kita.",
+                fakta: "Merupakan salah satu bintang terdekat dari Bumi dengan jarak sekitar 4,37 tahun cahaya.",
+                data: { "Jarak dari Bumi": "≈4,37 tahun cahaya", "Tipe Spektrum": "G2V", "Massa": "≈1,1 × Matahari" }
+            },
+            "Alpha Centauri B": {
+                tipe: "Bintang Keterangan (Deret Utama Kelas K)",
+                desc: "Bintang kedua yang lebih kecil dan sedikit lebih dingin dibanding Alpha Centauri A, mengorbit dalam satu sistem biner.",
+                fakta: "Bersama Alpha Centauri A, bintang ini membentuk sistem bintang ganda yang di dalamnya juga mengorbit planet seperti Proxima Centauri b.",
+                data: { "Jarak dari Bumi": "≈4,37 tahun cahaya", "Tipe Spektrum": "K1V", "Massa": "≈0,9 × Matahari" }
+            },
+
+            // ==========================================
+            // SISTEM BINTANG TETANGGA TAMBAHAN (Data: NASA Exoplanet Archive / JPL / SIMBAD)
+            // ==========================================
+            "Proxima Centauri": {
+                tipe: "Bintang Katai Merah (Kelas M5.5Ve)",
+                desc: "Komponen ketiga sistem Alpha Centauri dan bintang tunggal terdekat dengan Matahari kita, terlalu redup untuk dilihat tanpa teleskop.",
+                fakta: "Merupakan bintang flare aktif yang sesekali melontarkan suar raksasa yang bisa membakar atmosfer planet di sekitarnya; menaungi Proxima Centauri b, c, dan kandidat d.",
+                data: { "Jarak dari Bumi": "≈4,24 tahun cahaya", "Tipe Spektrum": "M5.5Ve", "Massa": "≈0,12 × Matahari", "Diameter": "≈1/7 diameter Matahari" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "Proxima Centauri b": {
+                tipe: "Super-Bumi Berbatu — Eksoplanet Terkonfirmasi",
+                desc: "Eksoplanet terdekat yang pernah dikonfirmasi mengorbit bintang selain Matahari, mengelilingi Proxima Centauri di zona layak huninya.",
+                fakta: "Berjarak hanya ≈4,24 tahun cahaya dari Bumi, dengan massa minimum ≈1,07 kali Bumi dan periode orbit hanya 11,2 hari mengelilingi bintang katai merahnya.",
+                data: { "Jarak dari Bumi": "≈4,24 tahun cahaya", "Massa minimum": "≈1,07 × Bumi", "Periode orbit": "11,2 hari", "Ditemukan": "2016" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "Barnard's Star": {
+                tipe: "Bintang Katai Merah (Kelas M4V)",
+                desc: "Bintang tunggal terdekat kedua dari Matahari, terkenal karena gerak dirinya (proper motion) di langit tercepat dari semua bintang yang diketahui.",
+                fakta: "Bergerak menyilang langit sejauh diameter Bulan purnama hanya dalam ≈180 tahun; menaungi kandidat eksoplanet Barnard's Star b.",
+                data: { "Jarak dari Bumi": "≈5,96 tahun cahaya", "Tipe Spektrum": "M4V", "Usia": "≈10 miliar tahun (jauh lebih tua dari Matahari)" },
+                sumber: "NASA Exoplanet Archive / JPL"
+            },
+            "Barnard's Star b": {
+                tipe: "Super-Bumi — Eksoplanet Terkonfirmasi",
+                desc: "Eksoplanet dingin yang mengorbit sangat dekat dengan Barnard's Star, berada di luar zona layak huni karena bintang induknya sangat redup.",
+                fakta: "Memiliki massa minimum ≈3,2 kali Bumi dan mengorbit hanya dalam 3,15 hari; dikonfirmasi tahun 2024 setelah dua dekade pencarian.",
+                data: { "Jarak dari Bumi": "≈5,96 tahun cahaya", "Massa minimum": "≈3,2 × Bumi", "Periode orbit": "≈3,15 hari" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "Sirius A": {
+                tipe: "Bintang Utama (Deret Utama Kelas A1V)",
+                desc: "Bintang paling terang di langit malam Bumi, bagian dari sistem bintang ganda Sirius di rasi Canis Major.",
+                fakta: "Bersinar 25 kali lebih terang dari Matahari dan hanya berjarak 8,6 tahun cahaya, menjadikannya salah satu tetangga bintang terdekat kita.",
+                data: { "Jarak dari Bumi": "≈8,6 tahun cahaya", "Tipe Spektrum": "A1V", "Massa": "≈2,1 × Matahari" },
+                sumber: "NASA / SIMBAD"
+            },
+            "Sirius B": {
+                tipe: "Katai Putih — Sisa Bintang",
+                desc: "Pendamping redup Sirius A, merupakan katai putih pertama yang pernah ditemukan oleh manusia.",
+                fakta: "Meski massanya mendekati Matahari, ukurannya hanya sebesar Bumi — begitu padat sehingga satu sendok teh materialnya bisa memiliki berat setara satu gajah.",
+                data: { "Jarak dari Bumi": "≈8,6 tahun cahaya", "Diameter": "≈12.000 km (seukuran Bumi)", "Massa": "≈1 × Matahari" },
+                sumber: "NASA / SIMBAD"
+            },
+            "Wolf 359": {
+                tipe: "Bintang Katai Merah (Kelas M6V)",
+                desc: "Salah satu bintang paling redup dan bermassa rendah yang berada di lingkungan terdekat Matahari, dikenal luas lewat referensi fiksi ilmiah.",
+                fakta: "Meski jaraknya sangat dekat secara kosmik, kecerahannya hanya 1/100.000 dari Matahari sehingga mustahil dilihat dengan mata telanjang.",
+                data: { "Jarak dari Bumi": "≈7,86 tahun cahaya", "Tipe Spektrum": "M6V", "Massa": "≈0,09 × Matahari" },
+                sumber: "NASA / SIMBAD"
+            },
+            "51 Pegasi": {
+                tipe: "Bintang Mirip Matahari (Kelas G2IV)",
+                desc: "Bintang di rasi Pegasus yang menjadi lokasi penemuan eksoplanet pertama yang mengorbit bintang mirip Matahari.",
+                fakta: "Penemuan planetnya pada tahun 1995 oleh Michel Mayor dan Didier Queloz meraih Hadiah Nobel Fisika 2019.",
+                data: { "Jarak dari Bumi": "≈50,9 tahun cahaya", "Tipe Spektrum": "G2IV", "Usia": "≈8 miliar tahun" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "51 Pegasi b": {
+                tipe: "Jupiter Panas — Eksoplanet Terkonfirmasi (dijuluki Dimidium)",
+                desc: "Eksoplanet pertama yang dikonfirmasi mengorbit bintang mirip Matahari, membuka era baru pemburuan planet di luar Tata Surya.",
+                fakta: "Mengorbit bintangnya hanya dalam 4,2 hari pada jarak 20 kali lebih dekat dari Merkurius ke Matahari, dengan suhu permukaan diperkirakan >1.000°C.",
+                data: { "Jarak dari Bumi": "≈50,9 tahun cahaya", "Massa": "≈0,47 × Jupiter", "Periode orbit": "4,2 hari", "Ditemukan": "1995" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "TRAPPIST-1": {
+                tipe: "Bintang Katai Merah Ultra-dingin (Kelas M8V)",
+                desc: "Bintang redup di rasi Aquarius yang menaungi tujuh planet seukuran Bumi — sistem eksoplanet berbatu terbanyak yang pernah ditemukan mengelilingi satu bintang.",
+                fakta: "Meski berusia 5,4–9,8 miliar tahun (lebih tua dari Matahari), ukurannya hanya sedikit lebih besar dari Jupiter; diteliti intensif oleh Teleskop James Webb NASA.",
+                data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Tipe Spektrum": "M8V", "Jumlah planet": "7 (b–h)" },
+                sumber: "NASA Science / Spitzer & JWST"
+            },
+            "TRAPPIST-1 b": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi", desc: "Planet paling dalam sistem TRAPPIST-1, mengorbit sangat dekat dan terkunci gravitasi terhadap bintangnya.", fakta: "Data JWST (2023) menunjukkan planet ini kemungkinan besar tidak memiliki atmosfer signifikan karena radiasi bintang yang intens.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈1,5 hari", "Radius": "≈1,02 × Bumi" }, sumber: "NASA / JWST" },
+            "TRAPPIST-1 c": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi", desc: "Planet kedua dari TRAPPIST-1, berukuran mirip Venus dan diperkirakan memiliki aktivitas vulkanik.", fakta: "Kepadatannya menunjukkan komposisi berbatu mirip planet dalam Tata Surya kita.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈2,4 hari", "Radius": "≈1,10 × Bumi" }, sumber: "NASA Exoplanet Archive" },
+            "TRAPPIST-1 d": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi", desc: "Planet dengan massa terendah di antara ketujuh planet TRAPPIST-1, berada di tepi dalam zona layak huni.", fakta: "Karena massanya kecil, kemungkinan telah kehilangan sebagian besar atmosfer awalnya akibat angin bintang.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈4,05 hari", "Radius": "≈0,79 × Bumi" }, sumber: "NASA Exoplanet Archive" },
+            "TRAPPIST-1 e": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi (Zona Layak Huni)", desc: "Dianggap planet paling mirip Bumi di sistem ini, berada tepat di tengah zona layak huni bintangnya.", fakta: "Kepadatan dan ukurannya sangat dekat dengan Bumi, menjadikannya target utama pencarian atmosfer oleh Teleskop James Webb.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈6,1 hari", "Radius": "≈0,92 × Bumi" }, sumber: "NASA / JWST" },
+            "TRAPPIST-1 f": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi (Zona Layak Huni)", desc: "Salah satu planet dalam zona layak huni TRAPPIST-1, kemungkinan memiliki lapisan es atau lautan di permukaannya.", fakta: "Menerima energi dari bintangnya mirip dengan yang diterima Mars dari Matahari.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈9,2 hari", "Radius": "≈1,04 × Bumi" }, sumber: "NASA Exoplanet Archive" },
+            "TRAPPIST-1 g": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi (Zona Layak Huni)", desc: "Planet terbesar di sistem TRAPPIST-1, juga berada dalam zona layak huni bintangnya.", fakta: "Radiusnya sedikit lebih besar dari Bumi, dan orbitnya beresonansi secara matematis rapi dengan planet-planet tetangganya.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈12,4 hari", "Radius": "≈1,13 × Bumi" }, sumber: "NASA Exoplanet Archive" },
+            "TRAPPIST-1 h": { tipe: "Planet Berbatu — Eksoplanet Terkonfirmasi", desc: "Planet terluar dan terdingin dari ketujuh planet TRAPPIST-1, kemungkinan berupa dunia beku.", fakta: "Ditemukan berkat pola resonansi orbital dengan enam planet lainnya, sebelum keberadaannya dikonfirmasi langsung oleh data Kepler.", data: { "Jarak dari Bumi": "≈40 tahun cahaya", "Periode orbit": "≈18,8 hari", "Radius": "≈0,76 × Bumi" }, sumber: "NASA Exoplanet Archive" },
+            "HD 209458": {
+                tipe: "Bintang Mirip Matahari (Kelas G0V)",
+                desc: "Bintang di rasi Pegasus yang menaungi planet pertama yang terdeteksi melintas (transit) di depan bintangnya.",
+                fakta: "Penemuan transit pada 1999 membuka metode transit sebagai teknik utama perburuan eksoplanet, kelak digunakan misi Kepler dan TESS NASA.",
+                data: { "Jarak dari Bumi": "≈159 tahun cahaya", "Tipe Spektrum": "G0V" },
+                sumber: "NASA Exoplanet Archive"
+            },
+            "HD 209458 b": {
+                tipe: "Jupiter Panas — Eksoplanet Terkonfirmasi (dijuluki Osiris)",
+                desc: "Eksoplanet pertama yang atmosfernya berhasil dideteksi langsung, dan planet pertama yang diketahui kehilangan atmosfernya ke luar angkasa.",
+                fakta: "Teleskop Hubble NASA mendeteksi 'ekor' gas hidrogen yang menguap dari planet ini akibat radiasi ekstrem bintangnya, seperti komet raksasa.",
+                data: { "Jarak dari Bumi": "≈159 tahun cahaya", "Massa": "≈0,69 × Jupiter", "Periode orbit": "3,5 hari" },
+                sumber: "NASA / Hubble Space Telescope"
+            },
+            "TOI-700": {
+                tipe: "Bintang Katai Merah (Kelas M2V)",
+                desc: "Bintang kecil dan redup di rasi Dorado yang ditemukan oleh satelit pemburu planet TESS milik NASA.",
+                fakta: "Menaungi setidaknya dua planet seukuran Bumi (TOI-700 d dan e) di dalam zona layak huninya.",
+                data: { "Jarak dari Bumi": "≈101,4 tahun cahaya", "Tipe Spektrum": "M2V" },
+                sumber: "NASA TESS Mission"
+            },
+            "TOI-700 d": {
+                tipe: "Planet Seukuran Bumi — Eksoplanet Terkonfirmasi (Zona Layak Huni)",
+                desc: "Planet seukuran Bumi pertama yang ditemukan TESS di zona layak huni bintangnya, kemungkinan besar terkunci gravitasi.",
+                fakta: "Model iklim NASA menunjukkan planet ini berpotensi memiliki lautan dan awan jika memiliki atmosfer mirip Bumi.",
+                data: { "Jarak dari Bumi": "≈101,4 tahun cahaya", "Radius": "≈1,19 × Bumi", "Periode orbit": "37,4 hari" },
+                sumber: "NASA TESS Mission"
+            },
+            "TOI-700 e": {
+                tipe: "Planet Seukuran Bumi — Eksoplanet Terkonfirmasi (Zona Layak Huni)",
+                desc: "Planet kedua di zona layak huni sistem TOI-700, sedikit lebih kecil dari Bumi dan diumumkan tahun 2023.",
+                fakta: "Ditemukan setelah analisis ulang data TESS mengungkap sinyal transit tambahan yang sebelumnya terlewat.",
+                data: { "Jarak dari Bumi": "≈101,4 tahun cahaya", "Radius": "≈0,95 × Bumi", "Periode orbit": "27,8 hari" },
+                sumber: "NASA TESS Mission"
+            },
+            "Kepler-186": {
+                tipe: "Bintang Katai Merah (Kelas M1V)",
+                desc: "Bintang redup di rasi Cygnus yang menaungi lima planet, termasuk planet seukuran Bumi pertama yang ditemukan di zona layak huni bintang lain.",
+                fakta: "Ukurannya hanya sekitar setengah dari Matahari, baik dari segi massa maupun ukuran.",
+                data: { "Jarak dari Bumi": "≈582 tahun cahaya", "Tipe Spektrum": "M1V" },
+                sumber: "NASA Kepler Mission"
+            },
+            "Kepler-186 f": {
+                tipe: "Planet Seukuran Bumi — Eksoplanet Terkonfirmasi (Zona Layak Huni)",
+                desc: "Planet bersejarah yang menjadi planet seukuran Bumi pertama yang dikonfirmasi berada di zona layak huni bintang lain (2014).",
+                fakta: "Jika berdiri di permukaannya saat tengah hari, cahaya bintangnya akan tampak seredup Matahari sesaat sebelum terbenam di Bumi.",
+                data: { "Jarak dari Bumi": "≈582 tahun cahaya", "Radius": "≈1,17 × Bumi", "Periode orbit": "129,9 hari" },
+                sumber: "NASA Kepler Mission"
+            },
+            "Kepler-452": {
+                tipe: "Bintang Mirip Matahari (Kelas G2V)",
+                desc: "Bintang di rasi Cygnus yang sangat mirip Matahari, baik dari suhu, massa, maupun tingkat kecerahannya.",
+                fakta: "Diperkirakan berusia sekitar 6 miliar tahun — 1,5 miliar tahun lebih tua dari Matahari kita.",
+                data: { "Jarak dari Bumi": "≈1.400 tahun cahaya", "Tipe Spektrum": "G2V" },
+                sumber: "NASA Kepler Mission"
+            },
+            "Kepler-452 b": {
+                tipe: "Super-Bumi — Eksoplanet Terkonfirmasi (dijuluki 'Sepupu Tua Bumi')",
+                desc: "Salah satu eksoplanet paling mirip Bumi yang pernah ditemukan, mengorbit bintang mirip Matahari di zona layak huni.",
+                fakta: "Berukuran ≈60% lebih besar dari Bumi dengan periode orbit 385 hari — sangat dekat dengan satu tahun Bumi.",
+                data: { "Jarak dari Bumi": "≈1.400 tahun cahaya", "Radius": "≈1,6 × Bumi", "Periode orbit": "385 hari" },
+                sumber: "NASA Kepler Mission (2015)"
+            },
+
+            // ==========================================
+            // SATELIT & WAHANA ANTARIKSA BUATAN MANUSIA (Data: NASA / ESA / JPL)
+            // ==========================================
+            "Hubble Space Telescope": {
+                tipe: "Satelit Buatan Manusia - Teleskop Antariksa",
+                desc: "Teleskop antariksa NASA/ESA yang mengamati alam semesta dalam panjang gelombang optik, ultraviolet, dan inframerah dekat sejak 1990.",
+                fakta: "Foto ikoniknya, 'Hubble Deep Field' dan 'Pillars of Creation', membantu menentukan usia alam semesta serta laju ekspansinya.",
+                data: { "Diluncurkan": "24 April 1990", "Ketinggian orbit": "≈535 km", "Periode orbit": "≈95 menit" },
+                sumber: "NASA / ESA"
+            },
+            "James Webb Space Telescope": {
+                tipe: "Satelit Buatan Manusia - Teleskop Antariksa Inframerah",
+                desc: "Teleskop antariksa terbesar yang pernah dibangun, mengorbit titik Lagrange L2 Matahari-Bumi, meneliti alam semesta dalam cahaya inframerah.",
+                fakta: "Cerminnya yang berlapis emas berdiameter 6,5 meter, tersusun dari 18 segmen heksagonal berilium, mampu mengamati galaksi tertua yang terbentuk hanya beberapa ratus juta tahun setelah Big Bang.",
+                data: { "Diluncurkan": "25 Desember 2021", "Jarak dari Bumi": "≈1,5 juta km (titik L2)", "Diameter cermin": "6,5 m" },
+                sumber: "NASA / ESA / CSA"
+            },
+            "Voyager 1": {
+                tipe: "Satelit Buatan Manusia - Wahana Antariksa Antarbintang",
+                desc: "Objek buatan manusia terjauh dari Bumi, telah memasuki ruang antarbintang sejak melewati heliopause Tata Surya.",
+                fakta: "Membawa 'Golden Record' berisi suara dan gambar Bumi untuk peradaban asing; per 2026 berjarak ≈170 SA dari Matahari dan sinyalnya butuh ±23 jam mencapai Bumi.",
+                data: { "Diluncurkan": "5 September 1977", "Jarak dari Matahari (2026)": "≈170 SA (≈25,5 miliar km)", "Status": "Ruang antarbintang sejak 2012" },
+                sumber: "NASA JPL Voyager Mission"
+            },
+            "Voyager 2": {
+                tipe: "Satelit Buatan Manusia - Wahana Antariksa Antarbintang",
+                desc: "Satu-satunya wahana antariksa yang pernah terbang lintas ke seluruh empat planet raksasa Tata Surya (Jupiter, Saturnus, Uranus, Neptunus).",
+                fakta: "Memasuki ruang antarbintang pada 2018; per 2026 berjarak ≈142,5 SA dari Matahari, masih mengirim data ilmiah setelah hampir lima dekade beroperasi.",
+                data: { "Diluncurkan": "20 Agustus 1977", "Jarak dari Matahari (2026)": "≈142,5 SA (≈21,3 miliar km)", "Status": "Ruang antarbintang sejak 2018" },
+                sumber: "NASA JPL Voyager Mission"
+            },
+            "New Horizons": {
+                tipe: "Satelit Buatan Manusia - Wahana Antariksa Sabuk Kuiper",
+                desc: "Wahana antariksa NASA pertama yang terbang lintas dan memotret Pluto secara close-up, kini menjelajahi Sabuk Kuiper.",
+                fakta: "Setelah terbang lintas Pluto (2015), wahana ini melanjutkan perjalanan dan terbang lintas objek Sabuk Kuiper purba bernama Arrokoth pada 2019 — objek terjauh yang pernah dikunjungi manusia saat itu.",
+                data: { "Diluncurkan": "19 Januari 2006", "Terbang lintas Pluto": "14 Juli 2015", "Jarak dari Matahari (2026)": "≈60+ SA" },
+                sumber: "NASA JPL New Horizons Mission"
+            },
+            "Parker Solar Probe": {
+                tipe: "Satelit Buatan Manusia - Wahana Riset Matahari",
+                desc: "Wahana antariksa NASA yang terbang menembus korona Matahari, menjadi objek buatan manusia tercepat yang pernah ada.",
+                fakta: "Pada pendekatan terdekatnya (2024) melesat dengan kecepatan ≈690.000 km/jam dan bertahan dari suhu perisai panas hingga ≈1.400°C hanya ≈6,1 juta km dari permukaan Matahari.",
+                data: { "Diluncurkan": "12 Agustus 2018", "Kecepatan puncak": "≈690.000 km/jam", "Jarak terdekat ke Matahari": "≈6,1 juta km" },
+                sumber: "NASA Parker Solar Probe Mission"
+            },
+            "Satelit GPS (Navstar)": {
+                tipe: "Satelit Buatan Manusia - Navigasi Orbit Menengah (MEO)",
+                desc: "Bagian dari konstelasi Global Positioning System milik AS yang menyediakan data posisi dan waktu presisi tinggi ke seluruh dunia.",
+                fakta: "Terdiri lebih dari 31 satelit aktif yang mengorbit pada ketinggian ≈20.200 km, jauh lebih tinggi dari ISS namun jauh lebih rendah dari orbit geostasioner.",
+                data: { "Ketinggian orbit": "≈20.200 km", "Periode orbit": "≈12 jam", "Jumlah satelit aktif": "31+" },
+                sumber: "NASA / GPS.gov (Departemen Pertahanan AS)"
+            },
+            "Konstelasi Starlink": {
+                tipe: "Satelit Buatan Manusia - Klaster Internet Orbit Rendah (LEO)",
+                desc: "Konstelasi megasatelit milik SpaceX yang menyediakan akses internet broadband ke seluruh dunia dari orbit rendah Bumi.",
+                fakta: "Per 2026 telah lebih dari 7.000 satelit aktif mengorbit pada ketinggian ≈550 km, menjadikannya konstelasi satelit terbesar dalam sejarah antariksa.",
+                data: { "Ketinggian orbit": "≈550 km", "Jumlah satelit (2026)": "7.000+", "Operator": "SpaceX" },
+                sumber: "SpaceX / FCC"
+            },
+
+            // ==========================================
+            // KOMET, ASTEROID DEKAT BUMI & OBJEK ANTARBINTANG (Data: NASA JPL/CNEOS)
+            // ==========================================
+            "Komet Halley (1P/Halley)": {
+                tipe: "Komet Periodik",
+                desc: "Komet paling terkenal dalam sejarah astronomi, dapat diamati dari Bumi tanpa teleskop setiap kali kembali mendekati Matahari.",
+                fakta: "Kembali setiap ≈76 tahun; terakhir terlihat 1986 dan diperkirakan akan kembali muncul di langit Bumi pada tahun 2061.",
+                data: { "Periode orbit": "≈76 tahun", "Kemunculan berikutnya": "2061", "Inti komet": "≈15 x 8 km" },
+                sumber: "NASA JPL Small-Body Database"
+            },
+            "'Oumuamua": {
+                tipe: "Objek Antarbintang — Bukan Anggota Tata Surya",
+                desc: "Objek pertama yang terdeteksi berasal dari luar Tata Surya yang melintas menembus wilayah kita pada 2017.",
+                fakta: "Bentuknya sangat memanjang seperti cerutu dan lintasannya melengkung secara tak terduga, memicu berbagai spekulasi ilmiah tentang asal-usulnya.",
+                data: { "Terdeteksi": "19 Oktober 2017", "Kecepatan": "≈87,3 km/detik", "Panjang perkiraan": "≈100-400 m" },
+                sumber: "NASA JPL / Pan-STARRS"
+            },
+            "101955 Bennu": {
+                tipe: "Asteroid Dekat Bumi (Apollo)",
+                desc: "Asteroid karbon purba yang menjadi target misi pengambilan sampel OSIRIS-REx milik NASA.",
+                fakta: "Sampel seberat ≈250 gram berhasil dibawa pulang ke Bumi pada September 2023, mengungkap kandungan senyawa organik dan air purba.",
+                data: { "Diameter": "≈490 m", "Misi": "OSIRIS-REx (NASA, sampel kembali 2023)", "Peluang tumbukan (2182)": "sangat kecil (≈1 banding 1.750)" },
+                sumber: "NASA OSIRIS-REx Mission"
+            },
+            "162173 Ryugu": {
+                tipe: "Asteroid Dekat Bumi (Apollo)",
+                desc: "Asteroid berbentuk seperti gasing yang menjadi target misi pengambilan sampel Hayabusa2 milik JAXA Jepang.",
+                fakta: "Sampel yang dibawa pulang tahun 2020 mengandung asam amino dan senyawa organik, mendukung teori bahwa asteroid membawa bahan penyusun kehidupan ke Bumi purba.",
+                data: { "Diameter": "≈900 m", "Misi": "Hayabusa2 (JAXA, sampel kembali 2020)" },
+                sumber: "JAXA / NASA"
+            },
+            "99942 Apophis": {
+                tipe: "Asteroid Dekat Bumi (Aten)",
+                desc: "Asteroid yang sempat menimbulkan kekhawatiran tumbukan Bumi, kini diketahui akan melintas sangat dekat namun aman.",
+                fakta: "Pada 13 April 2029, asteroid ini akan melintas lebih dekat ke Bumi daripada satelit geostasioner, cukup terang untuk dilihat tanpa alat bantu dari sebagian wilayah Bumi.",
+                data: { "Diameter": "≈340 m", "Jarak lintasan 2029": "≈32.000 km dari permukaan Bumi", "Risiko tumbukan": "Telah dipastikan nol untuk 100+ tahun ke depan" },
+                sumber: "NASA JPL CNEOS"
+            },
+
+            // ==========================================
+            // GUGUS BINTANG, NEBULA & BINTANG TERANG LATAR (Data: NASA/SIMBAD)
+            // ==========================================
+            "Gugus Pleiades (M45)": {
+                tipe: "Gugus Bintang Terbuka",
+                desc: "Gugus bintang terbuka paling terkenal dan mudah diamati dengan mata telanjang, dijuluki 'Tujuh Bidadari'.",
+                fakta: "Berisi ratusan bintang muda panas yang terbungkus sisa debu nebula biru, berusia hanya ≈100 juta tahun — jauh lebih muda dari Matahari.",
+                data: { "Jarak dari Bumi": "≈444 tahun cahaya", "Rasi": "Taurus", "Usia": "≈100 juta tahun" },
+                sumber: "NASA / SIMBAD"
+            },
+            "Nebula Orion (M42)": {
+                tipe: "Nebula Emisi — Wilayah Pembentukan Bintang",
+                desc: "Salah satu nebula paling terang dan paling banyak diteliti, tempat kelahiran ribuan bintang baru.",
+                fakta: "Dapat dilihat dengan mata telanjang sebagai 'noda kabur' di pedang rasi Orion; dicitrakan secara mendetail oleh Teleskop Hubble dan James Webb.",
+                data: { "Jarak dari Bumi": "≈1.344 tahun cahaya", "Rasi": "Orion", "Diameter": "≈24 tahun cahaya" },
+                sumber: "NASA / ESA Hubble & Webb"
+            },
+            "Betelgeuse": { tipe: "Bintang Maharaksasa Merah", desc: "Salah satu bintang terbesar yang diketahui, terletak di bahu rasi Orion, mendekati akhir hidupnya.", fakta: "Diperkirakan akan meledak sebagai supernova dalam skala waktu astronomis (mungkin besok, mungkin 100.000 tahun lagi) — ketika terjadi, akan terlihat terang di siang hari Bumi.", data: { "Jarak dari Bumi": "≈548 tahun cahaya", "Rasi": "Orion" }, sumber: "NASA / SIMBAD" },
+            "Rigel": { tipe: "Bintang Maharaksasa Biru", desc: "Bintang paling terang di rasi Orion, jauh lebih panas dan masif dibanding Matahari.", fakta: "Bersinar ≈120.000 kali lebih terang dari Matahari meski berjarak ratusan tahun cahaya.", data: { "Jarak dari Bumi": "≈860 tahun cahaya", "Rasi": "Orion" }, sumber: "NASA / SIMBAD" },
+            "Vega": { tipe: "Bintang Deret Utama Kelas A", desc: "Salah satu bintang paling terang di langit utara, pernah menjadi Bintang Utara sekitar 12.000 tahun lalu akibat presesi Bumi.", fakta: "Menjadi bintang standar kalibrasi kecerahan dalam astronomi selama lebih dari satu abad.", data: { "Jarak dari Bumi": "≈25 tahun cahaya", "Rasi": "Lyra" }, sumber: "NASA / SIMBAD" },
+            "Polaris": { tipe: "Bintang Maharaksasa Kuning (Bintang Utara)", desc: "Bintang yang saat ini hampir sejajar dengan poros rotasi Bumi, menjadikannya penanda arah utara yang andal.", fakta: "Sebenarnya adalah sistem bintang tiga; bintang utamanya adalah maharaksasa yang berdenyut (Cepheid variable).", data: { "Jarak dari Bumi": "≈433 tahun cahaya", "Rasi": "Ursa Minor" }, sumber: "NASA / SIMBAD" },
+            "Arcturus": { tipe: "Bintang Raksasa Oranye", desc: "Bintang paling terang di belahan langit utara, terletak di rasi Bootes.", fakta: "Bergerak sangat cepat menembus galaksi dibanding kebanyakan bintang lain di sekitarnya, menandakan asal-usulnya yang mungkin dari galaksi lain yang telah bergabung dengan Bima Sakti.", data: { "Jarak dari Bumi": "≈37 tahun cahaya", "Rasi": "Bootes" }, sumber: "NASA / SIMBAD" },
+            "Antares": { tipe: "Bintang Maharaksasa Merah", desc: "Bintang terang di rasi Scorpius, namanya berarti 'saingan Mars' karena warna merahnya yang mencolok.", fakta: "Jika ditempatkan di pusat Tata Surya kita, permukaannya akan meluas hingga melampaui orbit Mars.", data: { "Jarak dari Bumi": "≈550 tahun cahaya", "Rasi": "Scorpius" }, sumber: "NASA / SIMBAD" },
+            "Procyon": { tipe: "Bintang Deret Utama Kelas F (Biner)", desc: "Bintang paling terang di rasi Canis Minor, ditemani sebuah katai putih redup (Procyon B) yang mengorbitnya.", fakta: "Bersama Sirius dan Betelgeuse, Procyon membentuk pola langit populer yang dikenal sebagai 'Segitiga Musim Dingin'.", data: { "Jarak dari Bumi": "≈11,46 tahun cahaya", "Rasi": "Canis Minor" }, sumber: "NASA / SIMBAD" },
+            "Altair": { tipe: "Bintang Deret Utama Kelas A", desc: "Bintang paling terang di rasi Aquila, berputar sangat cepat sehingga bentuknya menggepeng di bagian khatulistiwanya.", fakta: "Berotasi begitu cepat (periode ≈9 jam) sehingga diameter khatulistiwanya ≈14% lebih lebar dari diameter kutubnya.", data: { "Jarak dari Bumi": "≈16,73 tahun cahaya", "Rasi": "Aquila" }, sumber: "NASA / SIMBAD" },
+            "Aldebaran": { tipe: "Bintang Raksasa Oranye", desc: "Bintang paling terang di rasi Taurus, tampak seolah menjadi 'mata banteng' meski sebenarnya tidak terkait secara fisik dengan gugus Hyades di belakangnya.", fakta: "Wahana Pioneer 10 diperkirakan akan melintas dekat Aldebaran dalam ≈2 juta tahun mendatang.", data: { "Jarak dari Bumi": "≈65 tahun cahaya", "Rasi": "Taurus" }, sumber: "NASA / SIMBAD" },
+            "Spica": { tipe: "Bintang Biner Raksasa Biru", desc: "Bintang paling terang di rasi Virgo, sesungguhnya adalah pasangan dua bintang panas yang saling mengorbit sangat berdekatan.", fakta: "Kedua komponennya begitu berdekatan sehingga bentuknya saling terdistorsi oleh gravitasi menjadi lonjong seperti telur.", data: { "Jarak dari Bumi": "≈250 tahun cahaya", "Rasi": "Virgo" }, sumber: "NASA / SIMBAD" },
+            "Pollux": { tipe: "Bintang Raksasa Oranye", desc: "Bintang paling terang di rasi Gemini, salah satu dari dua bintang 'si kembar' bersama Castor.", fakta: "Merupakan bintang raksasa terdekat dengan Matahari yang diketahui memiliki planet raksasa gas yang mengorbitnya (Pollux b).", data: { "Jarak dari Bumi": "≈34 tahun cahaya", "Rasi": "Gemini" }, sumber: "NASA / SIMBAD" },
+            "Capella": { tipe: "Bintang Raksasa Kuning (Sistem Quadruple)", desc: "Bintang paling terang di rasi Auriga, sebenarnya terdiri dari empat bintang: dua raksasa kuning besar dan dua katai merah redup.", fakta: "Dua bintang utamanya sama-sama mirip Matahari dalam suhu, namun sudah membengkak jauh lebih besar karena memasuki fase raksasa.", data: { "Jarak dari Bumi": "≈43 tahun cahaya", "Rasi": "Auriga" }, sumber: "NASA / SIMBAD" },
+            "Fomalhaut": { tipe: "Bintang Deret Utama Kelas A", desc: "Bintang paling terang di rasi Piscis Austrinus, terkenal karena dikelilingi cincin debu tempat sebuah eksoplanet raksasa pernah dicitrakan langsung.", fakta: "Fomalhaut b menjadi salah satu eksoplanet pertama yang berhasil dicitrakan langsung dalam cahaya tampak oleh Teleskop Hubble.", data: { "Jarak dari Bumi": "≈25 tahun cahaya", "Rasi": "Piscis Austrinus" }, sumber: "NASA / SIMBAD" },
+            "Deneb": { tipe: "Bintang Maharaksasa Biru-Putih", desc: "Salah satu titik sudut 'Segitiga Musim Panas' di rasi Cygnus, dan salah satu bintang paling terang secara intrinsik yang diketahui manusia.", fakta: "Meski jaraknya jauh lebih besar dari kebanyakan bintang terang lain di langit malam, Deneb tetap tampak terang karena bersinar puluhan ribu kali lebih terang dari Matahari.", data: { "Jarak dari Bumi": "≈2.600 tahun cahaya", "Rasi": "Cygnus" }, sumber: "NASA / SIMBAD" },
+            "Canopus": { tipe: "Bintang Maharaksasa Putih-Kuning", desc: "Bintang paling terang kedua di seluruh langit malam Bumi (setelah Sirius), terletak di rasi Carina di langit selatan.", fakta: "Sering dipakai sebagai bintang acuan navigasi otomatis bagi wahana antariksa NASA karena posisi dan kecerahannya yang stabil.", data: { "Jarak dari Bumi": "≈310 tahun cahaya", "Rasi": "Carina" }, sumber: "NASA / SIMBAD" },
+            "Achernar": { tipe: "Bintang Deret Utama Kelas B", desc: "Bintang paling terang di rasi Eridanus dan salah satu bintang paling menggepeng yang diketahui akibat rotasinya yang sangat cepat.", fakta: "Berotasi begitu cepat sehingga jari-jari khatulistiwanya diperkirakan ≈50% lebih besar dari jari-jari kutubnya.", data: { "Jarak dari Bumi": "≈139 tahun cahaya", "Rasi": "Eridanus" }, sumber: "NASA / SIMBAD" },
+
+            "Merkurius": {
+                tipe: "Planet Terestrial",
+                desc: "Planet terdekat dari Matahari dengan permukaan penuh kawah purba akibat tidak memiliki atmosfer pelindung yang berarti.",
+                fakta: "Suhu ekstrem berkisar dari -180°C di malam hari hingga 430°C di siang hari — rentang suhu terbesar di Tata Surya.",
+                data: { "Diameter": "4.879 km", "Jarak dari Matahari": "≈58 juta km", "Rotasi": "59 hari Bumi", "Bulan": "Tidak ada" }
+            },
+            "Venus": {
+                tipe: "Planet Terestrial",
+                desc: "Sering disebut kembaran Bumi karena ukurannya mirip, namun efek rumah kaca ekstrem menjadikannya planet terpanas di Tata Surya.",
+                fakta: "Berotasi sangat lambat dan terbalik (retrograde) — satu hari Venus (243 hari Bumi) lebih panjang dari satu tahunnya (225 hari Bumi).",
+                data: { "Diameter": "12.104 km", "Tekanan udara": "≈90x Bumi", "Rotasi": "243 hari (retrograde)", "Bulan": "Tidak ada" }
+            },
+            "Bumi": {
+                tipe: "Planet Terestrial",
+                desc: "Satu-satunya planet yang diketahui memiliki kehidupan, dengan 71% permukaannya ditutupi lautan air cair.",
+                fakta: "Medan magnetnya yang dihasilkan inti besi cair melindungi atmosfer dari radiasi dan angin matahari.",
+                data: { "Diameter": "12.742 km", "Rotasi": "24 jam", "Revolusi": "365,25 hari", "Bulan alami": "1 (Bulan)" }
+            },
+            "Mars": {
+                tipe: "Planet Terestrial",
+                desc: "Planet merah berdebu yang kaya akan besi oksida di permukaannya, target utama misi eksplorasi manusia berikutnya.",
+                fakta: "Memiliki Valles Marineris, ngarai sepanjang ±4.000 km, dan Olympus Mons, gunung berapi tertinggi di Tata Surya (±22 km).",
+                data: { "Diameter": "6.779 km", "Rotasi": "24,6 jam", "Bulan alami": "2 (Phobos, Deimos)" }
+            },
+            "Ceres": { tipe: "Planet Kerdil & Asteroid", desc: "Objek terbesar di Sabuk Asteroid, satu-satunya yang cukup masif untuk berbentuk hampir bulat sempurna.", fakta: "Mengandung cadangan es air dalam jumlah besar di bawah keraknya, diamati langsung oleh wahana Dawn NASA (2015).", data: { "Diameter": "≈940 km", "Ditemukan": "1801, Giuseppe Piazzi" } },
+            "Pallas": { tipe: "Asteroid Sabuk Utama", desc: "Asteroid terbesar ketiga di sabuk utama dengan orbit yang sangat miring dibanding asteroid besar lainnya.", fakta: "Bentuknya sangat tidak beraturan dan permukaannya dipenuhi kawah tabrakan purba.", data: { "Diameter": "≈510 km", "Ditemukan": "1802" } },
+            "Vesta": { tipe: "Asteroid Sabuk Utama", desc: "Asteroid tercerah di sabuk utama, cukup terang untuk kadang terlihat dari Bumi tanpa teleskop.", fakta: "Sebagian meteorit yang jatuh ke Bumi (kelompok HED) diyakini berasal dari pecahan kawah raksasa di kutub selatan Vesta.", data: { "Diameter": "≈525 km", "Ditemukan": "1807" } },
+            "Hygiea": { tipe: "Asteroid Sabuk Utama (kandidat planet kerdil)", desc: "Asteroid terbesar keempat di sabuk utama, permukaannya nyaris bulat sempurna sehingga sempat diusulkan sebagai planet kerdil.", fakta: "Ditemukan oleh Annibale de Gasparis pada 1849; citra teleskop VLT (2019) menunjukkan bentuknya hampir bulat sempurna.", data: { "Diameter": "≈430 km" } },
+            "Interamnia": { tipe: "Asteroid Sabuk Utama", desc: "Salah satu asteroid tak beraturan terbesar di sabuk utama dengan permukaan yang sangat gelap.", fakta: "Ditemukan tahun 1910, namun jarang diteliti mendalam karena kecerahannya rendah (albedo sangat gelap).", data: { "Diameter": "≈330 km" } },
+            "52 Europa": { tipe: "Asteroid Sabuk Utama", desc: "Salah satu asteroid gelap terbesar di sabuk utama. Namanya tidak ada kaitannya dengan bulan Europa milik Jupiter.", fakta: "Permukaannya kaya karbon dan sangat gelap, memantulkan kurang dari 6% cahaya yang diterimanya.", data: { "Diameter": "≈315 km" } },
+            "Davida": { tipe: "Asteroid Sabuk Utama", desc: "Salah satu dari sepuluh asteroid terbesar di sabuk utama dengan bentuk yang tidak beraturan.", fakta: "Ditemukan oleh Raymond Dugan pada 1903, dinamai dari nama depan seorang astronom pendukung observatoriumnya.", data: { "Diameter": "≈290 km" } },
+            "Sylvia": { tipe: "Asteroid Sabuk Utama", desc: "Asteroid pertama yang diketahui memiliki lebih dari satu bulan kecil yang mengorbitnya.", fakta: "Memiliki dua satelit kecil bernama Romulus dan Remus, ditemukan pada 2001 dan 2004.", data: { "Diameter": "≈270 km" } },
+            "Euphrosyne": { tipe: "Asteroid Sabuk Utama", desc: "Asteroid besar dengan orbit sangat miring terhadap bidang ekliptika dibanding asteroid besar lain.", fakta: "Merupakan anggota utama keluarga asteroid Euphrosyne yang terbentuk dari tabrakan purba.", data: { "Diameter": "≈260 km" } },
+            "Patientia": { tipe: "Asteroid Sabuk Utama", desc: "Asteroid gelap besar di sabuk utama yang permukaannya kaya senyawa karbon.", fakta: "Ditemukan pada 1899 dan termasuk salah satu asteroid paling gelap yang pernah dipetakan.", data: { "Diameter": "≈225 km" } },
+            "Cybele": { tipe: "Asteroid Sabuk Utama", desc: "Objek acuan bagi keluarga asteroid Cybele yang berada di tepi luar sabuk utama, dekat resonansi dengan Jupiter.", fakta: "Kelompok Cybele diperkirakan mengandung banyak asteroid kaya es di bawah permukaannya.", data: { "Diameter": "≈240 km" } },
+            "Thisbe": { tipe: "Asteroid Sabuk Utama", desc: "Anggota sabuk utama dengan permukaan gelap kaya karbon, tipe spektral C.", fakta: "Ukurannya cukup besar untuk sesekali menyebabkan okultasi bintang yang teramati dari Bumi.", data: { "Diameter": "≈200 km" } },
+            "Hektor": { tipe: "Asteroid Trojan Jupiter", desc: "Asteroid Trojan terbesar yang diketahui, sebenarnya tidak berada di sabuk utama Mars-Jupiter melainkan di titik Lagrange L4 Jupiter.", fakta: "Berbentuk memanjang seperti kacang dan memiliki satu bulan kecil bernama Skamandrios.", data: { "Diameter": "≈225 km (memanjang)", "Catatan lokasi": "Divisualkan di sabuk utama untuk kemudahan, lokasi asli di titik L4 Jupiter" } },
+            "Jupiter": {
+                tipe: "Planet Raksasa Gas",
+                desc: "Planet terbesar di Tata Surya, sebagian besar tersusun dari hidrogen dan helium seperti bintang kecil yang gagal menyala.",
+                fakta: "Bintik Merah Raksasa adalah badai yang telah berlangsung minimal berabad-abad, cukup besar untuk menelan Bumi beberapa kali.",
+                data: { "Diameter": "139.820 km", "Rotasi": "≈10 jam (tercepat di Tata Surya)", "Bulan diketahui": "95+" }
+            },
+            "Saturnus": {
+                tipe: "Planet Raksasa Gas",
+                desc: "Raksasa gas ikonik dengan sistem cincin es dan batuan yang sangat luas namun sangat tipis.",
+                fakta: "Densitas rata-ratanya lebih rendah dari air, sehingga secara teori Saturnus bisa mengapung jika ada bak air yang cukup besar.",
+                data: { "Diameter": "116.460 km", "Bulan diketahui": "140+", "Cincin": "Es & batuan, lebar ratusan ribu km, tebal hanya puluhan meter" }
+            },
+            "Uranus": {
+                tipe: "Planet Raksasa Es",
+                desc: "Raksasa es dingin yang unik karena berotasi dalam posisi hampir rebah dibanding planet lain.",
+                fakta: "Poros rotasinya miring sekitar 98°, sehingga planet ini seolah 'berguling' mengelilingi Matahari, kemungkinan akibat tabrakan purba.",
+                data: { "Diameter": "50.724 km", "Suhu atmosfer": "hingga -224°C", "Bulan diketahui": "27" }
+            },
+            "Neptunus": {
+                tipe: "Planet Raksasa Es",
+                desc: "Planet terjauh di Tata Surya dengan warna biru pekat akibat kandungan metana di atmosfernya.",
+                fakta: "Ditemukan tahun 1846 melalui perhitungan matematis akibat gangguan gravitasi pada orbit Uranus, sebelum benar-benar diamati langsung.",
+                data: { "Diameter": "49.244 km", "Kecepatan angin": "hingga ≈2.100 km/jam", "Bulan diketahui": "14 (terbesar: Triton)" }
+            },
+            "Pluto": {
+                tipe: "Planet Kerdil",
+                desc: "Raja Sabuk Kuiper yang statusnya direklasifikasi dari planet menjadi planet kerdil oleh IAU pada 2006.",
+                fakta: "Memiliki dataran es nitrogen berbentuk hati raksasa bernama Tombaugh Regio, dicitrakan wahana New Horizons NASA pada 2015.",
+                data: { "Diameter": "2.377 km", "Bulan": "5 (terbesar: Charon)" }
+            },
+            "Bulan": {
+                tipe: "Satelit Alami Bumi",
+                desc: "Satu-satunya satelit alami Bumi, mengatur siklus pasang surut air laut lewat tarikan gravitasinya.",
+                fakta: "Diperkirakan terbentuk dari puing tabrakan raksasa antara Bumi purba dengan objek seukuran Mars (disebut Theia) sekitar 4,5 miliar tahun lalu.",
+                data: { "Diameter": "3.474 km", "Jarak dari Bumi": "≈384.400 km", "Perubahan jarak": "menjauh ≈3,8 cm/tahun" }
+            },
+            "Phobos": { tipe: "Satelit Alami Mars", desc: "Bulan Mars yang lebih besar dan lebih dekat, mengorbit sangat rendah di atas permukaan planet.", fakta: "Mengorbit Mars hanya dalam 7 jam 39 menit — lebih cepat dari rotasi Mars sendiri — dan perlahan spiral mendekat, diperkirakan akan hancur menjadi cincin atau menabrak Mars dalam 30-50 juta tahun.", data: { "Diameter": "≈22 km", "Periode orbit": "7 jam 39 menit" } },
+            "Deimos": { tipe: "Satelit Alami Mars", desc: "Bulan Mars yang lebih kecil dan lebih jauh, berbentuk seperti kentang tidak beraturan.", fakta: "Permukaannya jauh lebih halus dari Phobos karena tertutup lapisan regolith (debu halus) yang tebal.", data: { "Diameter": "≈12 km", "Periode orbit": "≈30,3 jam" } },
+            "Io": { tipe: "Satelit Alami Jupiter (Bulan Galilea)", desc: "Bulan vulkanik paling aktif di Tata Surya, permukaannya terus-menerus diperbarui oleh letusan gunung berapi.", fakta: "Aktivitas vulkaniknya dipicu oleh pemanasan pasang surut (tidal heating) akibat tarikan gravitasi Jupiter dan bulan-bulan tetangganya.", data: { "Diameter": "3.643 km", "Ditemukan": "1610, Galileo Galilei" } },
+            "Europa": { tipe: "Satelit Alami Jupiter (Bulan Galilea)", desc: "Bulan es dengan lautan air asin cair raksasa di bawah permukaannya, salah satu target utama pencarian kehidupan di luar Bumi.", fakta: "Permukaannya yang licin dan retak-retak menandakan aktivitas geologi aktif; misi NASA Europa Clipper diluncurkan untuk mempelajarinya lebih lanjut.", data: { "Diameter": "3.122 km", "Ditemukan": "1610, Galileo Galilei" } },
+            "Ganymede": { tipe: "Satelit Alami Jupiter (Bulan Galilea)", desc: "Bulan terbesar di Tata Surya, bahkan lebih besar dari planet Merkurius.", fakta: "Satu-satunya bulan yang diketahui memiliki medan magnetnya sendiri, kemungkinan dihasilkan oleh inti besi cair di dalamnya.", data: { "Diameter": "5.268 km", "Ditemukan": "1610, Galileo Galilei" } },
+            "Callisto": { tipe: "Satelit Alami Jupiter (Bulan Galilea)", desc: "Bulan Galilea terluar, permukaannya adalah salah satu yang paling banyak dipenuhi kawah di Tata Surya.", fakta: "Permukaannya yang sangat kuno (miliaran tahun) hampir tidak menunjukkan aktivitas geologi, menjadikannya 'arsip fosil' Tata Surya awal.", data: { "Diameter": "4.821 km", "Ditemukan": "1610, Galileo Galilei" } },
+            "Titan": { tipe: "Satelit Alami Saturnus", desc: "Satu-satunya bulan di Tata Surya yang memiliki atmosfer tebal, bahkan lebih tebal dari atmosfer Bumi.", fakta: "Memiliki danau dan sungai metana serta etana cair di permukaannya — satu-satunya benda selain Bumi yang diketahui punya cairan stabil di permukaan.", data: { "Diameter": "5.150 km", "Ditemukan": "1655, Christiaan Huygens" } },
+            "Enceladus": { tipe: "Satelit Alami Saturnus", desc: "Bulan es kecil yang memancarkan geyser air raksasa dari celah di kutub selatannya.", fakta: "Geyser tersebut membuktikan adanya lautan air cair di bawah permukaan esnya, menjadikannya target utama pencarian kehidupan mikroba di luar Bumi.", data: { "Diameter": "≈504 km" } },
+            "Mimas": { tipe: "Satelit Alami Saturnus", desc: "Bulan kecil Saturnus yang terkenal karena mirip 'Death Star' dari Star Wars.", fakta: "Kemiripan itu berasal dari kawah raksasa Herschel yang lebarnya hampir sepertiga diameter bulan itu sendiri.", data: { "Diameter": "≈396 km" } },
+            "Titania": { tipe: "Satelit Alami Uranus", desc: "Bulan terbesar Uranus, permukaannya menunjukkan jejak aktivitas geologi purba berupa ngarai besar.", fakta: "Dinamai dari tokoh Ratu Peri dalam lakon 'A Midsummer Night's Dream' karya Shakespeare — semua bulan Uranus dinamai dari karya Shakespeare atau Alexander Pope.", data: { "Diameter": "≈1.578 km" } },
+            "Oberon": { tipe: "Satelit Alami Uranus", desc: "Bulan terbesar kedua Uranus dengan permukaan yang sangat banyak kawah.", fakta: "Salah satu kawahnya menunjukkan material gelap di dasarnya, diduga material organik yang tersingkap dari tabrakan purba.", data: { "Diameter": "≈1.523 km" } },
+            "Miranda": { tipe: "Satelit Alami Uranus", desc: "Bulan kecil dengan permukaan paling ekstrem dan beragam di antara bulan-bulan Uranus.", fakta: "Memiliki tebing curam Verona Rupes setinggi ±20 km, salah satu tebing tertinggi yang diketahui di Tata Surya.", data: { "Diameter": "≈472 km" } },
+            "Triton": { tipe: "Satelit Alami Neptunus", desc: "Bulan terbesar Neptunus, diperkirakan merupakan objek Sabuk Kuiper yang tertangkap gravitasi Neptunus.", fakta: "Mengorbit secara retrograde (berlawanan arah rotasi Neptunus) — satu-satunya bulan besar di Tata Surya dengan orbit seperti ini — dan memiliki geyser nitrogen aktif.", data: { "Diameter": "≈2.707 km" } },
+            "Charon": { tipe: "Satelit Alami Pluto", desc: "Bulan terbesar Pluto, begitu besar relatif terhadap induknya sehingga sistem ini kadang disebut 'planet kerdil ganda'.", fakta: "Pluto dan Charon saling terkunci gravitasi (tidally locked) satu sama lain, sehingga selalu menunjukkan sisi yang sama satu sama lain.", data: { "Diameter": "≈1.212 km" } },
+
+            // ==========================================
+            // WAHANA ANTARIKSA TAMBAHAN (Data: NASA JPL / ESA)
+            // ==========================================
+            "Cassini": { tipe: "Satelit Buatan Manusia - Wahana Orbiter Saturnus", desc: "Wahana antariksa NASA/ESA/ASI yang mengorbit Saturnus selama 13 tahun, mengungkap detail cincin dan bulan-bulannya.", fakta: "Misi diakhiri secara sengaja pada 2017 dengan menabrakkan wahana ke atmosfer Saturnus ('Grand Finale') untuk mencegah kontaminasi bulan Enceladus dan Titan yang berpotensi layak huni.", data: { "Diluncurkan": "15 Oktober 1997", "Tiba di Saturnus": "2004", "Misi berakhir": "15 September 2017" }, sumber: "NASA / ESA / ASI Cassini-Huygens" },
+            "Juno": { tipe: "Satelit Buatan Manusia - Wahana Orbiter Jupiter", desc: "Wahana antariksa NASA yang mengorbit Jupiter untuk mempelajari komposisi, medan gravitasi, dan medan magnetnya.", fakta: "Bertenaga surya penuh meski beroperasi jauh dari Matahari, dengan tiga panel surya raksasa sepanjang ≈9 meter masing-masing.", data: { "Diluncurkan": "5 Agustus 2011", "Tiba di Jupiter": "4 Juli 2016" }, sumber: "NASA JPL Juno Mission" },
+            "Pioneer 10": { tipe: "Satelit Buatan Manusia - Wahana Antariksa Perintis", desc: "Wahana antariksa pertama yang berhasil terbang lintas Jupiter dan pertama yang menuju keluar Tata Surya.", fakta: "Membawa pelat emas berukir gambar manusia dan lokasi Bumi bagi kemungkinan peradaban asing; sinyal terakhirnya diterima tahun 2003.", data: { "Diluncurkan": "2 Maret 1972", "Status": "Kehilangan kontak sejak 2003" }, sumber: "NASA Ames / JPL" },
+            "Pioneer 11": { tipe: "Satelit Buatan Manusia - Wahana Antariksa Perintis", desc: "Wahana antariksa pertama yang berhasil terbang lintas Saturnus, setelah sebelumnya juga melintasi Jupiter.", fakta: "Sinyal terakhirnya diterima pada 1995; kini melaju dalam diam menuju arah rasi Aquila.", data: { "Diluncurkan": "6 April 1973", "Status": "Kehilangan kontak sejak 1995" }, sumber: "NASA Ames / JPL" },
+            "Chandra X-ray Observatory": { tipe: "Satelit Buatan Manusia - Observatorium Sinar-X", desc: "Salah satu dari empat 'Great Observatories' NASA, mengamati alam semesta dalam panjang gelombang sinar-X berenergi tinggi.", fakta: "Mengorbit sangat elips hingga sepertiga jarak Bulan agar bisa mengamati tanpa gangguan sabuk radiasi Bumi selama lebih dari 60 jam per orbit.", data: { "Diluncurkan": "23 Juli 1999", "Ketinggian orbit": "≈139.000 km (apogee)" }, sumber: "NASA Chandra X-ray Observatory" },
+            "TESS": { tipe: "Satelit Buatan Manusia - Teleskop Pemburu Eksoplanet", desc: "Transiting Exoplanet Survey Satellite, misi NASA yang memindai hampir seluruh langit untuk menemukan eksoplanet baru lewat metode transit.", fakta: "Telah membantu mengonfirmasi ratusan eksoplanet baru sejak diluncurkan, termasuk sistem TOI-700.", data: { "Diluncurkan": "18 April 2018", "Orbit": "Elips resonansi 2:1 dengan Bulan" }, sumber: "NASA TESS Mission" },
+            "Europa Clipper": { tipe: "Satelit Buatan Manusia - Wahana Riset Bulan Europa", desc: "Wahana antariksa NASA yang menuju bulan Europa milik Jupiter untuk menyelidiki potensi kelayakhunian lautan bawah esnya.", fakta: "Merupakan wahana planet terbesar yang pernah dibangun NASA, dengan panel surya sepanjang ≈30 meter saat terbentang penuh.", data: { "Diluncurkan": "14 Oktober 2024", "Perkiraan tiba di Jupiter": "2030" }, sumber: "NASA JPL Europa Clipper Mission" },
+            "Perseverance": { tipe: "Satelit Buatan Manusia - Wahana Penjelajah Mars", desc: "Wahana penjelajah (rover) NASA yang mencari tanda-tanda kehidupan purba di Kawah Jezero, Mars, dan mengumpulkan sampel batuan.", fakta: "Membawa helikopter kecil bernama Ingenuity yang menjadi wahana pertama yang terbang bertenaga di planet lain.", data: { "Mendarat": "18 Februari 2021", "Lokasi": "Kawah Jezero, Mars" }, sumber: "NASA JPL Mars 2020 Mission" },
+
+            // ==========================================
+            // GUGUS BINTANG TAMBAHAN, NEBULA, BINTANG NEUTRON & LUBANG HITAM (Data: NASA/ESA/Chandra/SIMBAD)
+            // ==========================================
+            "Gugus Hyades": { tipe: "Gugus Bintang Terbuka", desc: "Gugus bintang terbuka terdekat dengan Tata Surya, terletak di rasi Taurus dekat bintang terang Aldebaran.", fakta: "Berusia ≈625-680 juta tahun, menjadikannya acuan penting untuk mengukur jarak dan usia gugus bintang lain di alam semesta.", data: { "Jarak dari Bumi": "≈153 tahun cahaya", "Rasi": "Taurus" }, sumber: "NASA / ESA Gaia" },
+            "Gugus Beehive (M44)": { tipe: "Gugus Bintang Terbuka", desc: "Gugus bintang terbuka besar dan terang di rasi Cancer, dikenal sejak zaman kuno sebagai 'Praesepe' (Palungan).", fakta: "Berisi lebih dari 1.000 bintang dan berusia serupa dengan Hyades, keduanya diperkirakan terbentuk dari awan gas raksasa yang sama.", data: { "Jarak dari Bumi": "≈577 tahun cahaya", "Rasi": "Cancer" }, sumber: "NASA / SIMBAD" },
+            "Gugus Omega Centauri": { tipe: "Gugus Bintang Globular", desc: "Gugus bintang globular terbesar dan paling masif yang mengorbit Bima Sakti, berisi jutaan bintang purba yang terikat rapat.", fakta: "Diduga merupakan inti sisa galaksi kerdil yang tertelan oleh Bima Sakti miliaran tahun lalu; teleskop Hubble menemukan indikasi lubang hitam bermassa menengah di intinya.", data: { "Jarak dari Bumi": "≈17.000 tahun cahaya", "Jumlah bintang": "≈10 juta" }, sumber: "NASA / ESA Hubble" },
+            "Gugus 47 Tucanae": { tipe: "Gugus Bintang Globular", desc: "Gugus bintang globular terpadat kedua di langit Bumi, terlihat jelas dari belahan bumi selatan di dekat Awan Magellan Kecil.", fakta: "Intinya sangat padat sehingga jarak antarbintang di sana jauh lebih rapat dibanding lingkungan Matahari kita.", data: { "Jarak dari Bumi": "≈13.000 tahun cahaya", "Usia": "≈13 miliar tahun" }, sumber: "NASA / SIMBAD" },
+
+            "Nebula Elang (Eagle Nebula / Pillars of Creation)": { tipe: "Nebula Emisi — Wilayah Pembentukan Bintang", desc: "Rumah bagi struktur ikonik 'Pilar-Pilar Penciptaan', kolom gas dan debu raksasa tempat bintang-bintang baru terbentuk.", fakta: "Dicitrakan ulang secara mendetail oleh James Webb Space Telescope pada 2022, mengungkap ribuan bintang muda tersembunyi di balik debunya.", data: { "Jarak dari Bumi": "≈6.500 tahun cahaya", "Rasi": "Serpens" }, sumber: "NASA / ESA / CSA Webb" },
+            "Nebula Cincin (Ring Nebula / M57)": { tipe: "Nebula Planeter", desc: "Cangkang gas bercahaya yang dilontarkan oleh bintang sekarat mirip Matahari di akhir hidupnya, membentuk struktur menyerupai cincin.", fakta: "Bintang katai putih di pusatnya adalah sisa inti bintang yang telah kehabisan bahan bakar nuklir, kini perlahan mendingin selama miliaran tahun.", data: { "Jarak dari Bumi": "≈2.283 tahun cahaya", "Rasi": "Lyra" }, sumber: "NASA / ESA Hubble" },
+            "Nebula Kepiting (Crab Nebula / M1)": { tipe: "Sisa Supernova", desc: "Sisa ledakan supernova yang tercatat oleh astronom Tiongkok pada tahun 1054 M, kini berupa awan gas yang terus mengembang.", fakta: "Di pusatnya terdapat Pulsar Kepiting, bintang neutron yang berputar ≈30 kali per detik sambil memancarkan denyut radiasi.", data: { "Jarak dari Bumi": "≈6.500 tahun cahaya", "Tahun ledakan tercatat": "1054 M" }, sumber: "NASA Chandra X-ray Observatory" },
+            "Nebula Helix": { tipe: "Nebula Planeter", desc: "Salah satu nebula planeter terdekat dengan Bumi, sering dijuluki 'Mata Tuhan' karena bentuknya yang menyerupai mata raksasa.", fakta: "Merupakan gambaran masa depan Matahari kita sendiri sekitar 5 miliar tahun lagi, saat ia melontarkan lapisan luarnya dan menyisakan katai putih.", data: { "Jarak dari Bumi": "≈650 tahun cahaya", "Rasi": "Aquarius" }, sumber: "NASA / ESA / NOIRLab" },
+            "Nebula Carina": { tipe: "Nebula Emisi — Wilayah Pembentukan Bintang", desc: "Salah satu nebula emisi terbesar dan paling terang di langit, rumah bagi bintang-bintang paling masif yang diketahui termasuk Eta Carinae.", fakta: "Citra 'Cosmic Cliffs' dari James Webb Space Telescope (2022) menampilkan tepi wilayah pembentuk bintang ini secara dramatis dan menjadi salah satu foto pertama JWST yang dirilis ke publik.", data: { "Jarak dari Bumi": "≈7.500 tahun cahaya", "Rasi": "Carina" }, sumber: "NASA / ESA / CSA Webb" },
+
+            "Pulsar Kepiting (PSR B0531+21)": { tipe: "Bintang Neutron (Pulsar)", desc: "Bintang neutron yang berputar sangat cepat di pusat Nebula Kepiting, sisa dari inti bintang masif yang runtuh saat supernova 1054 M.", fakta: "Berputar ≈30 kali per detik sambil memancarkan berkas radiasi seperti mercusuar kosmik, dengan medan magnet triliunan kali lebih kuat dari Bumi.", data: { "Jarak dari Bumi": "≈6.500 tahun cahaya", "Kecepatan putar": "≈30 putaran/detik", "Diameter perkiraan": "≈20 km" }, sumber: "NASA Chandra X-ray Observatory" },
+            "Pulsar Vela": { tipe: "Bintang Neutron (Pulsar)", desc: "Salah satu pulsar paling terang di langit dalam sinar-X dan sinar gamma, sisa supernova yang meledak ≈11.000 tahun lalu.", fakta: "Diketahui mengalami 'glitch' — lonjakan mendadak kecepatan putarnya — akibat penataan ulang materi super padat di dalam kerak bintang neutronnya.", data: { "Jarak dari Bumi": "≈960 tahun cahaya", "Kecepatan putar": "≈11 putaran/detik" }, sumber: "NASA Fermi Gamma-ray Space Telescope" },
+            "PSR B1919+21 (Pulsar Pertama)": { tipe: "Bintang Neutron (Pulsar)", desc: "Pulsar pertama yang pernah ditemukan manusia, terdeteksi oleh Jocelyn Bell Burnell pada 1967 dan sempat dijuluki 'LGM-1' (Little Green Men) karena sinyalnya yang sangat teratur.", fakta: "Penemuannya membuktikan keberadaan bintang neutron secara langsung dan mengubah pemahaman astronomi tentang tahap akhir kehidupan bintang masif.", data: { "Jarak dari Bumi": "≈2.283 tahun cahaya", "Kecepatan putar": "≈1,3 putaran/detik", "Ditemukan": "1967" }, sumber: "NASA / Jocelyn Bell Burnell (Cambridge)" },
+
+            "Sagittarius A*": { tipe: "Lubang Hitam Supermasif", desc: "Lubang hitam supermasif yang berada di pusat Galaksi Bima Sakti, mengendalikan orbit bintang-bintang di sekitarnya.", fakta: "Citra langsung pertamanya dirilis oleh kolaborasi Event Horizon Telescope pada 2022, menunjukkan cincin cahaya di sekeliling bayangan lubang hitamnya.", data: { "Jarak dari Bumi": "≈26.000 tahun cahaya", "Massa": "≈4,3 juta × Matahari" }, sumber: "NASA / Event Horizon Telescope" },
+            "Cygnus X-1": { tipe: "Lubang Hitam Bermassa Bintang", desc: "Salah satu sumber sinar-X terkuat pertama yang ditemukan di langit, kini diketahui merupakan lubang hitam yang menyedot materi dari bintang pendampingnya.", fakta: "Menjadi objek pertama yang secara luas diterima komunitas astronomi sebagai lubang hitam nyata, setelah perdebatan ilmiah panjang termasuk taruhan terkenal antara fisikawan Stephen Hawking dan Kip Thorne.", data: { "Jarak dari Bumi": "≈7.200 tahun cahaya", "Massa": "≈21 × Matahari" }, sumber: "NASA Chandra X-ray Observatory" },
+
+            "Nebula Gelap Coalsack": { tipe: "Nebula Gelap — Awan Debu Kosmik", desc: "Awan debu antarbintang padat yang menghalangi cahaya bintang di belakangnya, tampak sebagai 'lubang gelap' di pita cerah Bima Sakti.", fakta: "Terlihat jelas dengan mata telanjang dari belahan bumi selatan, berdekatan dengan rasi Salib Selatan (Crux).", data: { "Jarak dari Bumi": "≈600 tahun cahaya", "Rasi": "Crux" }, sumber: "NASA / ESO" },
+            "Awan Molekul Antarbintang": { tipe: "Debu & Gas Kosmik Antarbintang", desc: "Awan raksasa gas hidrogen dingin dan debu antarbintang yang tersebar di seluruh piringan galaksi, bahan mentah pembentukan bintang dan planet baru.", fakta: "Materi penyusun Tata Surya kita sendiri, termasuk atom-atom dalam tubuh manusia, berasal dari awan molekul serupa yang runtuh ≈4,6 miliar tahun lalu.", data: { "Komposisi utama": "Hidrogen molekul (H2), debu silikat & karbon" }, sumber: "NASA / ESA Herschel Space Observatory" },
+
+            // ==========================================
+            // TATA SURYA / BINTANG TETANGGA TAMBAHAN
+            // ==========================================
+            "Tau Ceti": { tipe: "Bintang Utama (Deret Utama Kelas G, mirip Matahari)", desc: "Bintang tunggal yang sangat mirip Matahari, terletak relatif dekat dengan Tata Surya dan telah lama menjadi target pencarian sinyal kecerdasan luar angkasa (SETI).", fakta: "Memiliki piringan puing (debris disk) yang jauh lebih masif dari Sabuk Kuiper kita, menandakan populasi asteroid/komet yang jauh lebih padat.", data: { "Jarak dari Bumi": "≈11,9 tahun cahaya", "Tipe Spektrum": "G8V" }, sumber: "NASA Exoplanet Archive / SIMBAD" },
+            "Tau Ceti e": { tipe: "Eksoplanet Terkonfirmasi (Kandidat Zona Laik Huni)", desc: "Eksoplanet super-Bumi yang mengorbit di tepi dalam zona laik huni Tau Ceti, salah satu kandidat dunia berbatu terdekat dengan Tata Surya.", fakta: "Jika terkonfirmasi berbatu, jaraknya yang hanya ≈12 tahun cahaya menjadikannya salah satu target realistis untuk misi wahana antarbintang generasi depan.", data: { "Massa minimum": "≈3,9 × Bumi", "Periode orbit": "≈162 hari" }, sumber: "NASA Exoplanet Archive" },
+            "Gliese 581": { tipe: "Bintang Utama (Katai Merah, kelas M3V)", desc: "Katai merah kecil dan redup yang memiliki salah satu sistem eksoplanet paling banyak dipelajari pada dekade 2000-2010an.", fakta: "Sistemnya sempat diperdebatkan memiliki hingga 6 planet, meski beberapa di antaranya kemudian diragukan keberadaannya karena sinyal aktivitas bintang.", data: { "Jarak dari Bumi": "≈20,4 tahun cahaya", "Tipe Spektrum": "M3V" }, sumber: "NASA Exoplanet Archive / SIMBAD" },
+            "Gliese 581 g": { tipe: "Eksoplanet Kandidat (Zona Laik Huni)", desc: "Eksoplanet kandidat yang sempat dijuluki dunia paling mirip Bumi saat pengumumannya pada 2010 karena posisinya tepat di zona laik huni bintang induknya.", fakta: "Keberadaannya masih diperdebatkan di kalangan astronom dan belum masuk kategori 'terkonfirmasi penuh' hingga kini.", data: { "Massa minimum": "≈3,1 × Bumi", "Status": "Kandidat, belum terkonfirmasi penuh" }, sumber: "NASA Exoplanet Archive" },
+            "Upsilon Andromedae": { tipe: "Bintang Utama (Deret Utama Kelas F)", desc: "Bintang yang sedikit lebih panas dan masif dari Matahari, menjadi rumah bagi salah satu sistem multi-planet raksasa gas pertama yang ditemukan.", fakta: "Memiliki pendamping bintang katai merah jauh (Upsilon Andromedae B) yang mengorbitnya dalam periode ribuan tahun.", data: { "Jarak dari Bumi": "≈44 tahun cahaya", "Tipe Spektrum": "F8V" }, sumber: "NASA Exoplanet Archive / SIMBAD" },
+            "Upsilon Andromedae b": { tipe: "Eksoplanet Terkonfirmasi (Jupiter Panas)", desc: "Salah satu 'Jupiter panas' pertama yang ditemukan, planet gas raksasa yang mengorbit sangat dekat dengan bintang induknya.", fakta: "Mengelilingi bintangnya hanya dalam waktu ≈4,6 hari akibat jaraknya yang sangat dekat dengan Upsilon Andromedae.", data: { "Massa minimum": "≈0,69 × Jupiter", "Periode orbit": "≈4,6 hari" }, sumber: "NASA Exoplanet Archive" },
+
+            // ==========================================
+            // GALAKSI ANDROMEDA (M31) & GALAKSI-GALAKSI KATAI PENDAMPING
+            // ==========================================
+            "Galaksi Andromeda (M31)": { tipe: "Galaksi Spiral — Tetangga Terbesar Bima Sakti", desc: "Galaksi spiral raksasa terdekat dengan Bima Sakti, dapat dilihat dengan mata telanjang dari Bumi sebagai bercak kabut redup di rasi Andromeda.", fakta: "Andromeda dan Bima Sakti diperkirakan akan bertabrakan dan bergabung dalam ≈4-4,5 miliar tahun lagi, membentuk satu galaksi elips raksasa yang kadang dijuluki 'Milkomeda'.", data: { "Jarak dari Bumi": "≈2,5 juta tahun cahaya", "Diameter piringan": "≈220.000 tahun cahaya", "Perkiraan jumlah bintang": "≈1 triliun" }, sumber: "NASA / ESA Hubble Space Telescope" },
+            "M32 (Galaksi Katai Andromeda)": { tipe: "Galaksi Katai Eliptis — Pendamping Andromeda", desc: "Galaksi katai kompak yang mengorbit dekat Andromeda, tampak sebagai bercak terang bulat kecil di dekat piringan utamanya.", fakta: "Diduga dulunya merupakan galaksi spiral yang lapisan luarnya terlucuti akibat interaksi gravitasi kuat dengan Andromeda, menyisakan intinya yang padat.", data: { "Jarak dari Bumi": "≈2,49 juta tahun cahaya", "Tipe": "Galaksi Katai Eliptis Kompak" }, sumber: "NASA / ESA Hubble Space Telescope" },
+            "M110 (Galaksi Katai Andromeda)": { tipe: "Galaksi Katai Eliptis — Pendamping Andromeda", desc: "Galaksi katai eliptis kedua yang mengiringi Andromeda, lebih besar dan lebih baur dibanding M32, terlihat sebagai bercak lonjong redup.", fakta: "Mengandung sejumlah kecil gas dan debu yang tidak lazim ditemukan pada galaksi eliptis kebanyakan, menandakan riwayat pembentukan bintang yang belum lama berhenti.", data: { "Jarak dari Bumi": "≈2,69 juta tahun cahaya", "Tipe": "Galaksi Katai Eliptis" }, sumber: "NASA / ESA Hubble Space Telescope" },
+            "Awan Magellan Besar (LMC)": { tipe: "Galaksi Katai Ireguler — Pendamping Bima Sakti", desc: "Galaksi katai terdekat yang mengorbit Bima Sakti, terlihat jelas dengan mata telanjang dari belahan bumi selatan sebagai bercak kabut terang.", fakta: "Menjadi lokasi Supernova 1987A, ledakan bintang paling terang dan paling banyak dipelajari sejak penemuan teleskop.", data: { "Jarak dari Bumi": "≈163.000 tahun cahaya", "Tipe": "Galaksi Katai Ireguler" }, sumber: "NASA / ESA Hubble Space Telescope" },
+            "Awan Magellan Kecil (SMC)": { tipe: "Galaksi Katai Ireguler — Pendamping Bima Sakti", desc: "Galaksi katai lebih kecil yang menemani Awan Magellan Besar, keduanya saling terikat gravitasi sambil bersama-sama mengorbit Bima Sakti.", fakta: "Studi terhadap bintang Cepheid di dalamnya membantu Henrietta Swan Leavitt merumuskan metode pengukuran jarak kosmik yang mengubah astronomi modern.", data: { "Jarak dari Bumi": "≈200.000 tahun cahaya", "Tipe": "Galaksi Katai Ireguler" }, sumber: "NASA / ESA Hubble Space Telescope" }
+        };
+
+        function buatWarnaDasar(warnaHex) {
+            const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64; 
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = warnaHex; ctx.fillRect(0, 0, 128, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // ==========================================
+        // GENERATOR TEKSTUR PROSEDURAL (mendekati palet warna & pola permukaan asli menurut citra NASA)
+        // ==========================================
+        function acakWarna(hex, jarak) {
+            const c = new THREE.Color(hex);
+            c.r = Math.min(1, Math.max(0, c.r + (Math.random() - 0.5) * jarak));
+            c.g = Math.min(1, Math.max(0, c.g + (Math.random() - 0.5) * jarak));
+            c.b = Math.min(1, Math.max(0, c.b + (Math.random() - 0.5) * jarak));
+            return `rgb(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)})`;
+        }
+
+        // Tekstur planet/bulan berbatu bertekstur kawah (Merkurius, Mars, Bulan, Ceres, Pluto, dll.)
+        function buatTeksturBerbatu(warnaDasar, jumlahKawah = 55, warnaAksen = null) {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = warnaDasar; ctx.fillRect(0, 0, 256, 128);
+            for (let i = 0; i < 900; i++) {
+                ctx.fillStyle = acakWarna(warnaDasar, 0.12);
+                ctx.fillRect(Math.random()*256, Math.random()*128, 2, 2);
+            }
+            for (let i = 0; i < jumlahKawah; i++) {
+                const x = Math.random()*256, y = Math.random()*128, r = 1.5 + Math.random()*6;
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+                grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+                grad.addColorStop(0.7, 'rgba(0,0,0,0.25)');
+                grad.addColorStop(1, 'rgba(255,255,255,0.08)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+            }
+            if (warnaAksen) {
+                for (let i = 0; i < 8; i++) {
+                    ctx.fillStyle = warnaAksen;
+                    ctx.globalAlpha = 0.15 + Math.random()*0.2;
+                    ctx.beginPath(); ctx.ellipse(Math.random()*256, Math.random()*128, 15+Math.random()*20, 6+Math.random()*8, Math.random()*Math.PI, 0, Math.PI*2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // Tekstur planet gas raksasa berpita (Jupiter, Saturnus, Uranus, Neptunus)
+        function buatTeksturGasRaksasa(warnaPita, tinggiTurbulensi = 6) {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            let y = 0;
+            while (y < 128) {
+                const tebal = 4 + Math.random() * tinggiTurbulensi;
+                ctx.fillStyle = warnaPita[Math.floor(Math.random()*warnaPita.length)];
+                ctx.fillRect(0, y, 256, tebal);
+                y += tebal;
+            }
+            for (let i = 0; i < 300; i++) {
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fillRect(Math.random()*256, Math.random()*128, 20+Math.random()*30, 1);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // Tekstur Bumi: benua hijau/cokelat, lautan biru, awan tipis
+        function buatTeksturBumi() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1a5fbf'; ctx.fillRect(0, 0, 256, 128);
+            const warnaBenua = ['#2f7d3c', '#4a8f3f', '#8a7a4a', '#3d6b2e'];
+            for (let i = 0; i < 26; i++) {
+                ctx.fillStyle = warnaBenua[Math.floor(Math.random()*warnaBenua.length)];
+                ctx.beginPath();
+                ctx.ellipse(Math.random()*256, 15+Math.random()*98, 12+Math.random()*26, 7+Math.random()*14, Math.random()*Math.PI, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 14; i++) {
+                ctx.globalAlpha = 0.35 + Math.random()*0.25;
+                ctx.beginPath();
+                ctx.ellipse(Math.random()*256, Math.random()*128, 14+Math.random()*22, 4+Math.random()*7, Math.random()*Math.PI, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#eef4ff';
+            ctx.fillRect(0, 0, 256, 6); ctx.fillRect(0, 122, 256, 6);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // Tekstur Matahari / bintang: granulasi permukaan bercahaya
+        function buatTeksturBintang(warnaInti, warnaAksen) {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = warnaInti; ctx.fillRect(0, 0, 256, 128);
+            for (let i = 0; i < 700; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? warnaAksen : warnaInti;
+                ctx.globalAlpha = 0.2 + Math.random()*0.4;
+                ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*128, 1+Math.random()*3, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            for (let i = 0; i < 4; i++) {
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*128, 2+Math.random()*3, 0, Math.PI*2); ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // Tekstur galaksi spiral bergaya foto (inti keemasan bercahaya, lengan spiral, pita debu gelap,
+        // tepi kebiruan) — dipakai untuk visual Bima Sakti & Andromeda agar mendekati citra referensi.
+        // Jika `kerdil` true, hasilnya hanya kabut/bercak lembut tanpa lengan (untuk galaksi katai pendamping).
+        function buatTeksturGalaksiSpiral(warnaInti, warnaLengan, warnaDebu, warnaBiru, kerdil = false) {
+            const size = 1024;
+            const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const cx = size / 2, cy = size / 2;
+            ctx.clearRect(0, 0, size, size);
+
+            if (kerdil) {
+                const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.5);
+                g.addColorStop(0, 'rgba(255,248,225,0.95)');
+                g.addColorStop(0.25, warnaInti + 'cc');
+                g.addColorStop(0.6, warnaInti + '55');
+                g.addColorStop(1, 'rgba(20,15,25,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(cx, cy, size * 0.5, 0, Math.PI * 2); ctx.fill();
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            // Halo/cakram redup menyeluruh — dibuat lebih berlapis agar tepi galaksi tidak terasa kosong
+            const g0 = ctx.createRadialGradient(cx, cy, size * 0.04, cx, cy, size * 0.5);
+            g0.addColorStop(0, 'rgba(255,238,205,0.95)');
+            g0.addColorStop(0.14, 'rgba(255,214,150,0.6)');
+            g0.addColorStop(0.35, 'rgba(180,160,190,0.28)');
+            g0.addColorStop(0.6, 'rgba(110,110,160,0.15)');
+            g0.addColorStop(0.85, 'rgba(70,75,120,0.06)');
+            g0.addColorStop(1, 'rgba(20,20,40,0)');
+            ctx.fillStyle = g0;
+            ctx.beginPath(); ctx.arc(cx, cy, size * 0.5, 0, Math.PI * 2); ctx.fill();
+
+            // ===== PALANG (BAR) TENGAH — Bima Sakti & Andromeda tergolong galaksi spiral BERPALANG
+            // (SBbc/SBb), bukan galaksi spiral biasa dengan inti bundar polos. Sudut dimiringkan lebih
+            // besar mengikuti temuan ESA Gaia bahwa palang lebih miring terhadap arah Matahari. =====
+            const sudutBar = 0.5;
+            // Spiral logaritmik juga dipakai di sini (bukan linear) agar tekstur foto galaksi ini
+            // konsisten dengan struktur partikel 3D-nya — lilitan rapat dekat inti, merenggang di tepi.
+            const tMinTex = 0.05;
+            function putaranTexLog(t, k) {
+                return k * Math.log((t + tMinTex) / tMinTex);
+            }
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(sudutBar);
+            for (let i = 0; i < 4200; i++) {
+                const panjang = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 0.7) * size * 0.19;
+                const lebarMaks = (1 - Math.min(Math.abs(panjang) / (size * 0.2), 1) * 0.75) * size * 0.045 + 2;
+                const lebar = (Math.random() - 0.5) * lebarMaks;
+                ctx.fillStyle = Math.random() < 0.72 ? warnaInti : warnaLengan;
+                ctx.globalAlpha = (0.55 + Math.random() * 0.4) * (1 - Math.abs(panjang) / (size * 0.21));
+                const rad = 1.1 + Math.random() * 2.6;
+                ctx.beginPath(); ctx.arc(panjang, lebar, rad, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+
+            // ===== ENAM LENGAN SPIRAL: 2 lengan UTAMA menonjol (padat, banyak bintang muda) menyambung
+            // ujung palang + 4 lengan MINOR lebih redup di antaranya — sesuai temuan ESA Gaia bahwa
+            // Bima Sakti memiliki LEBIH DARI DUA lengan spiral namun kurang menonjol dari perkiraan lama. =====
+            const jumlahLenganTex = 6;
+            const lenganUtamaTex = [0, 3];
+            // Lintasan tiap lengan disimpan agar bisa dipakai menaruh gumpalan warna (blob) besar,
+            // menghasilkan KONSENTRASI warna berdekatan seperti pada citra referensi Gaia.
+            const lintasanArm = [];
+            for (let arm = 0; arm < jumlahLenganTex; arm++) {
+                const utama = lenganUtamaTex.includes(arm);
+                const armOffset = (arm / jumlahLenganTex) * Math.PI * 2 + sudutBar + (Math.random() * 0.06);
+                lintasanArm.push({ armOffset, utama });
+                const jumlahTitik = utama ? 3200 : 1500;
+                for (let i = 0; i < jumlahTitik; i++) {
+                    const t = i / jumlahTitik;
+                    const r = size * 0.075 + t * size * 0.425;
+                    const theta = armOffset + putaranTexLog(t, 1.87) + Math.sin(t * 9) * 0.16;
+                    const x = cx + Math.cos(theta) * r;
+                    const y = cy + Math.sin(theta) * r * 0.97;
+                    const rnd = Math.random();
+                    if (utama && rnd > 0.93) {
+                        ctx.fillStyle = '#ff9ecb'; // gumpalan HII merah muda (wilayah pembentukan bintang)
+                        ctx.globalAlpha = (0.55 - t * 0.25) * (0.5 + Math.random() * 0.5);
+                    } else if (utama && rnd > 0.8) {
+                        ctx.fillStyle = warnaBiru; // kelompok bintang muda biru-putih terang
+                        ctx.globalAlpha = (0.6 - t * 0.3) * (0.5 + Math.random() * 0.5);
+                    } else {
+                        ctx.fillStyle = t < 0.32 ? warnaLengan : warnaBiru;
+                        ctx.globalAlpha = ((utama ? 0.55 : 0.28) - t * 0.3) * (0.35 + Math.random() * 0.65);
+                    }
+                    const rad = (utama ? 1.4 : 0.85) + Math.random() * 3.0 * (1 - t * 0.4);
+                    ctx.beginPath();
+                    ctx.arc(x + (Math.random() - 0.5) * 16, y + (Math.random() - 0.5) * 16, rad, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.globalAlpha = 1;
+
+            // Gumpalan (blob) warna besar & lembut di sepanjang lengan utama — meniru konsentrasi
+            // OB association raksasa & wilayah HII yang tampak menyatu berdekatan pada citra Gaia asli.
+            lintasanArm.forEach(({ armOffset, utama }) => {
+                if (!utama) return;
+                const jumlahBlob = 12;
+                for (let i = 0; i < jumlahBlob; i++) {
+                    const t = 0.08 + (i / jumlahBlob) * 0.85 + Math.random() * 0.04;
+                    const r = size * 0.075 + t * size * 0.425;
+                    const theta = armOffset + putaranTexLog(t, 1.87) + Math.sin(t * 9) * 0.16;
+                    const x = cx + Math.cos(theta) * r;
+                    const y = cy + Math.sin(theta) * r * 0.97;
+                    const warnaBlob = Math.random() < 0.5 ? '#ff9ecb' : warnaBiru;
+                    const radiusBlob = (18 + Math.random() * 26) * (1 - t * 0.35);
+                    const gBlob = ctx.createRadialGradient(x, y, 0, x, y, radiusBlob);
+                    gBlob.addColorStop(0, warnaBlob + '55');
+                    gBlob.addColorStop(1, warnaBlob + '00');
+                    ctx.fillStyle = gBlob;
+                    ctx.beginPath(); ctx.arc(x, y, radiusBlob, 0, Math.PI * 2); ctx.fill();
+                }
+            });
+
+            // Pita debu gelap melengkung khas galaksi spiral dilihat miring — mengikuti tiap lengan
+            ctx.strokeStyle = warnaDebu;
+            for (let arm = 0; arm < jumlahLenganTex; arm++) {
+                const utama = lenganUtamaTex.includes(arm);
+                ctx.globalAlpha = utama ? 0.32 : 0.16;
+                ctx.beginPath();
+                const armOffset = (arm / jumlahLenganTex) * Math.PI * 2 + sudutBar + 0.33;
+                for (let i = 0; i <= 200; i++) {
+                    const t = i / 200;
+                    const r = size * 0.055 + t * size * 0.405;
+                    const theta = armOffset + putaranTexLog(t, 1.8);
+                    const x = cx + Math.cos(theta) * r;
+                    const y = cy + Math.sin(theta) * r * 0.97;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.lineWidth = 6 + Math.random() * 10;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+
+            // Inti terang (bulge) keemasan, sedikit memanjang mengikuti arah palang
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(sudutBar);
+            ctx.scale(1.55, 1);
+            const g1 = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.1);
+            g1.addColorStop(0, 'rgba(255,252,240,1)');
+            g1.addColorStop(0.4, 'rgba(255,238,205,0.92)');
+            g1.addColorStop(1, 'rgba(255,220,170,0)');
+            ctx.fillStyle = g1;
+            ctx.beginPath(); ctx.arc(0, 0, size * 0.1, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // Membangun piringan galaksi bertekstur (Bima Sakti / Andromeda) dimiringkan menyerupai perspektif
+        // foto astronomi asli, lengkap dengan opsi galaksi katai pendamping (mis. M32/M110, LMC/SMC).
+        function buatGalaksiVisual(nama, posisiPusat, radiusVisual, rotX, rotZ, skemaWarna, infoLangsung, satelit = []) {
+            const grup = new THREE.Group();
+            grup.position.copy(posisiPusat);
+            grup.rotation.x = rotX;
+            grup.rotation.z = rotZ;
+            scene.add(grup);
+
+            const tekstur = buatTeksturGalaksiSpiral(skemaWarna.inti, skemaWarna.lengan, skemaWarna.debu, skemaWarna.biru);
+            const mat = new THREE.MeshBasicMaterial({
+                map: tekstur, transparent: true, opacity: 0.95,
+                blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+            });
+            const piringan = new THREE.Mesh(new THREE.PlaneGeometry(radiusVisual * 2, radiusVisual * 2), mat);
+            piringan.userData = {
+                nama, tipe: infoLangsung.tipe, desc: infoLangsung.desc, fakta: infoLangsung.fakta,
+                data: infoLangsung.data || null, sumber: infoLangsung.sumber || "NASA / ESA Hubble Space Telescope"
+            };
+            objekInteraktif.push(piringan);
+            grup.add(piringan);
+
+            satelit.forEach(s => {
+                const infoSat = dbSemesta[s.nama];
+                const texSat = buatTeksturGalaksiSpiral(s.warna, s.warna, '#1a1815', s.warna, true);
+                const matSat = new THREE.MeshBasicMaterial({ map: texSat, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+                const meshSat = new THREE.Mesh(new THREE.PlaneGeometry(s.ukuran, s.ukuran), matSat);
+                meshSat.position.set(s.x, s.y, s.z || 1);
+                if (infoSat) {
+                    meshSat.userData = { nama: s.nama, tipe: infoSat.tipe, desc: infoSat.desc, fakta: infoSat.fakta, data: infoSat.data || null, sumber: infoSat.sumber || "NASA / ESA Hubble Space Telescope" };
+                    objekInteraktif.push(meshSat);
+                }
+                grup.add(meshSat);
+            });
+
+            return grup;
+        }
+
+        function isiPanelData(dataObj) {
+            const el = document.getElementById('sp-data');
+            const section = document.getElementById('sp-data-section');
+            if (!dataObj) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+            let html = '';
+            for (const k in dataObj) { html += `<div><b>${k}:</b> ${dataObj[k]}</div>`; }
+            el.innerHTML = html;
+        }
+
+        function buatBendaLangit(nama, ukuran, material, jarakOrbit, kecOrbit, grupInduk = scene) {
+            if(jarakOrbit > 0 && grupInduk === scene) {
+                const titik = []; for (let i = 0; i <= 48; i++) { const s = (i/48)*Math.PI*2; titik.push(new THREE.Vector3(Math.cos(s)*jarakOrbit, 0, Math.sin(s)*jarakOrbit)); }
+                scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(titik), new THREE.LineBasicMaterial({ color: 0x333344, transparent: true, opacity: 0.4 })));
+            }
+            const pivot = new THREE.Group(); grupInduk.add(pivot);
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(ukuran, 18, 18), material);
+            mesh.position.x = jarakOrbit;
+            
+            const dataDB = dbSemesta[nama];
+            if (dataDB) {
+                mesh.userData = { nama: nama, tipe: dataDB.tipe, desc: dataDB.desc, fakta: dataDB.fakta, data: dataDB.data || null, sumber: dataDB.sumber || "NASA / IAU" };
+                objekInteraktif.push(mesh); 
+            }
+            pivot.add(mesh);
+            return { pivot, mesh, kecOrbit };
+        }
+
+        function buatSatelitBuatan(nama, ukuranBox, warnaBody, jarakOrbit, kecOrbit, grupInduk, info) {
+            const pivot = new THREE.Group(); grupInduk.add(pivot);
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(ukuranBox, ukuranBox * 0.6, ukuranBox * 0.6),
+                new THREE.MeshStandardMaterial({ color: warnaBody, metalness: 0.6, roughness: 0.35, emissive: warnaBody, emissiveIntensity: 0.15 })
+            );
+            body.position.x = jarakOrbit;
+
+            const panelMat = new THREE.MeshStandardMaterial({ color: 0x162a52, side: THREE.DoubleSide, metalness: 0.4, roughness: 0.5 });
+            const panelGeo = new THREE.PlaneGeometry(ukuranBox * 2.4, ukuranBox * 0.9);
+            const panelKiri = new THREE.Mesh(panelGeo, panelMat); panelKiri.position.x = -ukuranBox * 1.7; body.add(panelKiri);
+            const panelKanan = new THREE.Mesh(panelGeo, panelMat); panelKanan.position.x = ukuranBox * 1.7; body.add(panelKanan);
+
+            body.userData = { nama: info.nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA / ESA" };
+            objekInteraktif.push(body);
+            pivot.add(body);
+            return { pivot, mesh: body, kecOrbit };
+        }
+
+        // ==========================================
+        // FUNGSI HELPER UNTUK SISTEM BINTANG JAUH, EKSOPLANET, WAHANA ANTARIKSA & OBJEK KECIL
+        // ==========================================
+        const kelompokEko = [];
+
+        function buatBintangAsing(nama, posisi, radius, warnaHex) {
+            const mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(radius, 20, 20),
+                new THREE.MeshBasicMaterial({ map: buatTeksturBintang(warnaHex, '#ffffff') })
+            );
+            mesh.position.copy(posisi);
+            const info = dbSemesta[nama];
+            if (info) {
+                mesh.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA Exoplanet Archive / SIMBAD" };
+                objekInteraktif.push(mesh);
+            }
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function buatEksoplanetAsing(nama, bintangMesh, jarakOrbit, ukuran, warnaHex, kecOrbit) {
+            const pivot = new THREE.Group();
+            pivot.position.copy(bintangMesh.position);
+            scene.add(pivot);
+            const mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(ukuran, 14, 14),
+                new THREE.MeshStandardMaterial({ color: warnaHex, emissive: warnaHex, emissiveIntensity: 0.3 })
+            );
+            mesh.position.x = jarakOrbit;
+            const info = dbSemesta[nama];
+            if (info) {
+                mesh.userData = { nama: `⭐ ${nama}`, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA Exoplanet Archive" };
+                objekInteraktif.push(mesh);
+            }
+            pivot.add(mesh);
+            kelompokEko.push({ pivot, mesh, kec: kecOrbit });
+            return { pivot, mesh };
+        }
+
+        function buatWahanaJauh(nama, posisi, ukuran = 1.6) {
+            const geo = new THREE.ConeGeometry(ukuran * 0.35, ukuran, 6);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7, roughness: 0.3, emissive: 0x3388ff, emissiveIntensity: 0.25 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.copy(posisi);
+            const antena = new THREE.Mesh(new THREE.CircleGeometry(ukuran * 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xe8e8e8, side: THREE.DoubleSide, metalness: 0.5 }));
+            antena.rotation.x = Math.PI / 2; antena.position.y = ukuran * 0.7; mesh.add(antena);
+            const info = dbSemesta[nama];
+            if (info) {
+                mesh.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA JPL" };
+                objekInteraktif.push(mesh);
+            }
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function buatObjekKecilKosmik(nama, posisi, ukuran, warnaHex, bentuk = 'asteroid') {
+            let geo;
+            if (bentuk === 'komet') geo = new THREE.DodecahedronGeometry(ukuran, 0);
+            else if (bentuk === 'lonjong') geo = new THREE.SphereGeometry(ukuran, 8, 6);
+            else geo = new THREE.IcosahedronGeometry(ukuran, 0);
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: warnaHex, roughness: 0.85 }));
+            if (bentuk === 'lonjong') mesh.scale.set(2.6, 0.6, 0.6);
+            mesh.position.copy(posisi);
+            const info = dbSemesta[nama];
+            if (info) {
+                mesh.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA JPL Small-Body Database" };
+                objekInteraktif.push(mesh);
+            }
+            scene.add(mesh);
+            if (bentuk === 'komet') {
+                const titikEkor = [];
+                const arah = posisi.clone().normalize();
+                for (let i = 0; i < 40; i++) {
+                    const jarak = i * 1.6;
+                    titikEkor.push(new THREE.Vector3().copy(posisi).addScaledVector(arah, jarak).add(new THREE.Vector3((Math.random()-0.5)*2,(Math.random()-0.5)*2,(Math.random()-0.5)*2)));
+                }
+                const ekorGeo = new THREE.BufferGeometry().setFromPoints(titikEkor);
+                const ekorMat = new THREE.PointsMaterial({ color: 0xbcd9ff, size: 0.5, transparent: true, opacity: 0.55 });
+                scene.add(new THREE.Points(ekorGeo, ekorMat));
+            }
+            return mesh;
+        }
+
+        function buatGugusBintang(nama, posisiTengah, jumlahTitik, radiusSebar, warnaHex) {
+            const posisiArr = [];
+            for (let i = 0; i < jumlahTitik; i++) {
+                posisiArr.push(
+                    posisiTengah.x + (Math.random() - 0.5) * radiusSebar,
+                    posisiTengah.y + (Math.random() - 0.5) * radiusSebar * 0.5,
+                    posisiTengah.z + (Math.random() - 0.5) * radiusSebar
+                );
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(posisiArr, 3));
+            const mat = new THREE.PointsMaterial({ color: warnaHex, size: 1.3, transparent: true, opacity: 0.85 });
+            const titik = new THREE.Points(geo, mat);
+            scene.add(titik);
+
+            const penanda = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 10), new THREE.MeshBasicMaterial({ color: warnaHex, transparent: true, opacity: 0.35 }));
+            penanda.position.copy(posisiTengah);
+            const info = dbSemesta[nama];
+            if (info) {
+                penanda.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA / SIMBAD" };
+                objekInteraktif.push(penanda);
+            }
+            scene.add(penanda);
+            return { titik, penanda };
+        }
+
+        function buatBintangLatar(nama, posisi, warnaHex, ukuran = 2.2) {
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(ukuran, 12, 12), new THREE.MeshBasicMaterial({ color: warnaHex }));
+            mesh.position.copy(posisi);
+            const info = dbSemesta[nama];
+            if (info) {
+                mesh.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA / SIMBAD" };
+                objekInteraktif.push(mesh);
+            }
+            scene.add(mesh);
+            return mesh;
+        }
+
+        // ==========================================
+        // FUNGSI HELPER TAMBAHAN: NEBULA, BINTANG NEUTRON, LUBANG HITAM, DEBU KOSMIK
+        // ==========================================
+
+        // Nebula sebagai awan partikel bercahaya multi-warna (emisi / planeter / sisa supernova / gelap)
+        function buatNebula(nama, posisiTengah, jumlahTitik, radiusSebar, paletWarna, gelap = false) {
+            const posisiArr = [], warnaArr = [];
+            const warnaBase = paletWarna.map(h => new THREE.Color(h));
+            for (let i = 0; i < jumlahTitik; i++) {
+                const sudut = Math.random() * Math.PI * 2;
+                const r = Math.pow(Math.random(), 0.5) * radiusSebar;
+                posisiArr.push(
+                    posisiTengah.x + Math.cos(sudut) * r + (Math.random()-0.5)*radiusSebar*0.3,
+                    posisiTengah.y + (Math.random() - 0.5) * radiusSebar * 0.45,
+                    posisiTengah.z + Math.sin(sudut) * r + (Math.random()-0.5)*radiusSebar*0.3
+                );
+                const c = warnaBase[Math.floor(Math.random()*warnaBase.length)];
+                warnaArr.push(c.r, c.g, c.b);
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(posisiArr, 3));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(warnaArr, 3));
+            const mat = new THREE.PointsMaterial({ size: gelap ? 1.6 : 2.1, vertexColors: true, transparent: true, opacity: gelap ? 0.5 : 0.65, depthWrite: false, blending: gelap ? THREE.NormalBlending : THREE.AdditiveBlending });
+            const awan = new THREE.Points(geo, mat);
+            scene.add(awan);
+
+            const penanda = new THREE.Mesh(new THREE.SphereGeometry(1.6, 10, 10), new THREE.MeshBasicMaterial({ color: paletWarna[0], transparent: true, opacity: 0.3 }));
+            penanda.position.copy(posisiTengah);
+            const info = dbSemesta[nama];
+            if (info) {
+                penanda.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA / ESA" };
+                objekInteraktif.push(penanda);
+            }
+            scene.add(penanda);
+            return { awan, penanda };
+        }
+
+        // Bintang neutron / pulsar: inti superpadat kecil bercahaya putih-kebiruan dengan berkas radiasi ganda berputar
+        const semuaPulsar = [];
+        function buatBintangNeutron(nama, posisi, warnaHex = '#bcd9ff') {
+            const grup = new THREE.Group(); grup.position.copy(posisi); scene.add(grup);
+            const inti = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ color: warnaHex }));
+            grup.add(inti);
+            // Berkas radiasi (jet) ganda khas pulsar
+            const jetMat = new THREE.MeshBasicMaterial({ color: warnaHex, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+            const jetGeo = new THREE.ConeGeometry(0.9, 14, 10, 1, true);
+            const jetAtas = new THREE.Mesh(jetGeo, jetMat); jetAtas.position.y = 7; grup.add(jetAtas);
+            const jetBawah = new THREE.Mesh(jetGeo, jetMat); jetBawah.position.y = -7; jetBawah.rotation.x = Math.PI; grup.add(jetBawah);
+            const cincin = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.6, 24), new THREE.MeshBasicMaterial({ color: warnaHex, transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
+            cincin.rotation.x = Math.PI/2; grup.add(cincin);
+
+            const info = dbSemesta[nama];
+            if (info) {
+                inti.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA Chandra X-ray Observatory" };
+                objekInteraktif.push(inti);
+            }
+            semuaPulsar.push(grup);
+            return grup;
+        }
+
+        // Lubang hitam: cakram akresi bercahaya mengelilingi "bayangan" gelap pusat
+        function buatLubangHitam(nama, posisi, radiusEventHorizon = 1.4) {
+            const grup = new THREE.Group(); grup.position.copy(posisi); scene.add(grup);
+            const bayangan = new THREE.Mesh(new THREE.SphereGeometry(radiusEventHorizon, 20, 20), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+            grup.add(bayangan);
+            const cakram = new THREE.Mesh(
+                new THREE.RingGeometry(radiusEventHorizon * 1.3, radiusEventHorizon * 3.4, 48),
+                new THREE.MeshBasicMaterial({ color: 0xffaa55, transparent: true, opacity: 0.75, side: THREE.DoubleSide })
+            );
+            cakram.rotation.x = Math.PI / 2.3; grup.add(cakram);
+            const cakram2 = new THREE.Mesh(
+                new THREE.RingGeometry(radiusEventHorizon * 1.3, radiusEventHorizon * 3.4, 48),
+                new THREE.MeshBasicMaterial({ color: 0xff5522, transparent: true, opacity: 0.3, side: THREE.DoubleSide })
+            );
+            cakram2.rotation.x = Math.PI / 2.3 + 0.25; grup.add(cakram2);
+
+            const info = dbSemesta[nama];
+            if (info) {
+                bayangan.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA / Event Horizon Telescope" };
+                objekInteraktif.push(bayangan);
+            }
+            semuaPulsar.push({ rotation: cakram.rotation, __isCakram: true, cakram, cakram2 });
+            return grup;
+        }
+
+        // Debu & gas kosmik antarbintang: awan partikel halus tersebar luas, tidak begitu terang (mengisi ruang kosong)
+        function buatDebuKosmik(nama, posisiTengah, jumlahTitik, radiusSebar, warnaHex) {
+            const posisiArr = [];
+            for (let i = 0; i < jumlahTitik; i++) {
+                posisiArr.push(
+                    posisiTengah.x + (Math.random() - 0.5) * radiusSebar,
+                    posisiTengah.y + (Math.random() - 0.5) * radiusSebar * 0.6,
+                    posisiTengah.z + (Math.random() - 0.5) * radiusSebar
+                );
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(posisiArr, 3));
+            const mat = new THREE.PointsMaterial({ color: warnaHex, size: 0.6, transparent: true, opacity: 0.28, depthWrite: false });
+            const awan = new THREE.Points(geo, mat);
+            scene.add(awan);
+            if (nama && dbSemesta[nama]) {
+                const penanda = new THREE.Mesh(new THREE.SphereGeometry(1.0, 8, 8), new THREE.MeshBasicMaterial({ color: warnaHex, transparent: true, opacity: 0.2 }));
+                penanda.position.copy(posisiTengah);
+                const info = dbSemesta[nama];
+                penanda.userData = { nama, tipe: info.tipe, desc: info.desc, fakta: info.fakta, data: info.data || null, sumber: info.sumber || "NASA" };
+                objekInteraktif.push(penanda);
+                scene.add(penanda);
+            }
+            return awan;
+        }
+
+        // ==========================================
+        // 500 ASTEROID BERANEKA JENIS (distribusi tipe spektral mengikuti populasi nyata Sabuk Utama
+        // menurut data NASA JPL Small-Body Database: C-type ~75%, S-type ~17%, M-type ~8%)
+        // ==========================================
+        const tipeAsteroid = {
+            "C": { label: "Karbonan (C-type)", warna: 0x3a352f, roughness: 0.95,
+                   desc: "Asteroid karbonan, tipe paling umum di Sabuk Utama, permukaannya sangat gelap dan kaya senyawa karbon purba.",
+                   fakta: "Memantulkan kurang dari 10% cahaya yang diterimanya (albedo sangat rendah) dan diyakini menyimpan bahan organik serta air terikat yang nyaris tak berubah sejak awal Tata Surya." },
+            "S": { label: "Silikat (S-type)", warna: 0x9c8060, roughness: 0.8,
+                   desc: "Asteroid silikat/berbatu, populasi terbanyak kedua di Sabuk Utama, tersusun dari campuran logam nikel-besi dan silikat magnesium.",
+                   fakta: "Lebih terang dibanding tipe C (albedo ≈0,10-0,22) dan mendominasi wilayah Sabuk Utama bagian dalam yang lebih dekat ke Mars." },
+            "M": { label: "Metalik (M-type)", warna: 0xb0aca0, roughness: 0.55,
+                   desc: "Asteroid metalik yang diduga merupakan sisa inti logam dari protoplanet purba yang hancur akibat tabrakan besar.",
+                   fakta: "Kaya kandungan nikel-besi, menjadikannya kandidat utama target masa depan untuk eksplorasi sumber daya tambang luar angkasa (space mining)." },
+            "V": { label: "Basaltik (V-type / Vestoid)", warna: 0x7a6a55, roughness: 0.7,
+                   desc: "Asteroid basaltik yang diyakini merupakan pecahan dari kerak Vesta akibat tabrakan raksasa purba di kutub selatannya.",
+                   fakta: "Menjadi sumber sebagian besar meteorit HED (Howardite-Eucrite-Diogenite) yang ditemukan jatuh ke Bumi." }
+        };
+        const matAsteroidTipe = {};
+        for (const t in tipeAsteroid) {
+            matAsteroidTipe[t] = new THREE.MeshStandardMaterial({ color: tipeAsteroid[t].warna, roughness: tipeAsteroid[t].roughness, flatShading: true });
+        }
+        const geoAsteroidKecil = new THREE.IcosahedronGeometry(0.22, 0);
+        const geoAsteroidSedang = new THREE.IcosahedronGeometry(0.34, 0);
+
+        function pilihTipeAsteroid() {
+            const r = Math.random();
+            if (r < 0.75) return "C";
+            if (r < 0.92) return "S";
+            if (r < 0.97) return "M";
+            return "V";
+        }
+
+        function buatAsteroidProsedural(indexGlobal, rOrbMin, rOrbMax, yBentang, grup, prefiks) {
+            const tipe = pilihTipeAsteroid();
+            const geo = Math.random() > 0.7 ? geoAsteroidSedang : geoAsteroidKecil;
+            const mesh = new THREE.Mesh(geo, matAsteroidTipe[tipe]);
+            const rOrb = rOrbMin + Math.random() * (rOrbMax - rOrbMin);
+            const sudut = Math.random() * Math.PI * 2;
+            mesh.position.set(Math.cos(sudut) * rOrb, (Math.random() - 0.5) * yBentang, Math.sin(sudut) * rOrb);
+            mesh.scale.setScalar(0.6 + Math.random() * 0.9);
+            mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+            const info = tipeAsteroid[tipe];
+            mesh.userData = {
+                nama: `${prefiks} #${indexGlobal}`,
+                tipe: `Asteroid Tipe ${info.label}`,
+                desc: info.desc,
+                fakta: info.fakta,
+                data: { "Klasifikasi spektral": tipe + "-type", "Katalog": "IAU Minor Planet Center (belum bernama individual)" },
+                sumber: "NASA JPL Small-Body Database"
+            };
+            objekInteraktif.push(mesh);
+            grup.add(mesh);
+            return mesh;
+        }
+
+        // ==========================================
+        // POLA RASI BINTANG YANG BERPUTAR SECARA REAL-TIME (mensimulasikan rotasi langit malam Bumi)
+        // Bintang & garis penghubung rasi diletakkan pada "kubah langit" raksasa yang mengelilingi seluruh
+        // adegan lalu diputar mengikuti waktu nyata perangkat pengguna, meniru rotasi bola langit harian.
+        // ==========================================
+        // Untuk sementara pola rasi dinonaktifkan ("dihilangkan dulu") agar fokus pengembangan
+        // diarahkan ke perbaikan posisi & penambahan benda-benda langit sesuai data NASA.
+        // Set ke true kapan saja untuk mengaktifkan kembali kubah langit rasi bintang.
+        const TAMPILKAN_POLA_RASI = false;
+
+        const kubahLangit = new THREE.Group();
+        scene.add(kubahLangit);
+
+        // Pola rasi disederhanakan dalam koordinat 2D lokal (x,y) per rasi, dihubungkan garis sesuai
+        // urutan penghubung nyata, lalu diproyeksikan ke permukaan bola langit radius besar.
+        const daftarRasi = [
+            { nama: "Orion", radiusBola: 2600, pusatSudut: [0.4, 0.15],
+              titik: [[0,2],[0.5,1.6],[1,2.1],[0.5,0],[0.5,-0.4],[0.5,-0.8],[0,-2],[1,-1.8]],
+              sambung: [[0,1],[1,2],[1,3],[3,4],[4,5],[5,6],[5,7]] },
+            { nama: "Ursa Major (Big Dipper)", radiusBola: 2700, pusatSudut: [1.9, 0.55],
+              titik: [[0,0],[0.8,0.2],[1.6,0.15],[2.3,0.5],[2.2,1.3],[1.5,1.5],[0.8,1.1]],
+              sambung: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]] },
+            { nama: "Scorpius", radiusBola: 2650, pusatSudut: [3.4, -0.6],
+              titik: [[0,1.4],[0.3,0.9],[0.6,0.3],[0.9,-0.3],[1.3,-0.8],[1.8,-1.1],[2.2,-0.8],[2.5,-0.2]],
+              sambung: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]] },
+            { nama: "Cassiopeia", radiusBola: 2750, pusatSudut: [5.0, 0.9],
+              titik: [[0,0],[0.7,0.6],[1.4,0.1],[2.1,0.7],[2.8,0.15]],
+              sambung: [[0,1],[1,2],[2,3],[3,4]] },
+            { nama: "Salib Selatan (Crux)", radiusBola: 2600, pusatSudut: [2.6, -1.2],
+              titik: [[0,1],[0,-1],[-0.8,0.1],[0.8,0.1]],
+              sambung: [[0,1],[2,3]] }
+        ];
+
+        function proyeksiBolaLangit(radius, sudutU, sudutV, lokalX, lokalY) {
+            const theta = sudutU + lokalX * 0.22;
+            const phi = Math.PI/2 - sudutV - lokalY * 0.22;
+            return new THREE.Vector3(
+                radius * Math.sin(phi) * Math.cos(theta),
+                radius * Math.cos(phi),
+                radius * Math.sin(phi) * Math.sin(theta)
+            );
+        }
+
+        if (TAMPILKAN_POLA_RASI) {
+            daftarRasi.forEach(rasi => {
+                const posisi3D = rasi.titik.map(([lx, ly]) => proyeksiBolaLangit(rasi.radiusBola, rasi.pusatSudut[0], rasi.pusatSudut[1], lx, ly));
+
+                // Titik bintang rasi (dapat diklik)
+                posisi3D.forEach((p, i) => {
+                    const bintangMesh = new THREE.Mesh(new THREE.SphereGeometry(3.2, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfff6d8 }));
+                    bintangMesh.position.copy(p);
+                    if (i === 0) {
+                        bintangMesh.userData = {
+                            nama: `Rasi ${rasi.nama}`,
+                            tipe: "Pola Rasi Bintang (Asterisma)",
+                            desc: `Susunan bintang yang membentuk pola rasi ${rasi.nama} seperti terlihat dari langit malam Bumi. Pola ini diproyeksikan pada kubah langit yang berputar mengikuti waktu nyata, meniru rotasi harian langit akibat rotasi Bumi.`,
+                            fakta: "Rasi bintang adalah pola dua dimensi semu — bintang-bintang penyusunnya sebenarnya berada pada jarak yang sangat berbeda-beda dari Bumi dan tidak saling terkait secara fisik.",
+                            data: { "Jumlah rasi resmi IAU": "88 rasi" },
+                            sumber: "IAU Constellations / NASA"
+                        };
+                        objekInteraktif.push(bintangMesh);
+                    }
+                    kubahLangit.add(bintangMesh);
+                });
+
+                // Garis penghubung pola rasi
+                rasi.sambung.forEach(([a, b]) => {
+                    const geo = new THREE.BufferGeometry().setFromPoints([posisi3D[a], posisi3D[b]]);
+                    const garis = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x7d8fdc, transparent: true, opacity: 0.55 }));
+                    kubahLangit.add(garis);
+                });
+            });
+        }
+
+        // ==========================================
+        // STARFIELD LATAR BELAKANG RAKSASA — RIBUAN TITIK BINTANG YANG TERSUSUN MEMBENTUK
+        // STRUKTUR SPIRAL GALAKSI BIMA SAKTI SECARA UTUH KETIKA DIPERKECIL SKALANYA (ZOOM OUT JAUH)
+        // ==========================================
+        // Jarak Matahari ke Sagittarius A* (pusat Bima Sakti) menurut data NASA/ESA Gaia: ≈26.000 tahun cahaya.
+        // pusatGalaksi dihitung dengan skema skala yang sama (posisiOrbitLuar) yang dipakai untuk seluruh
+        // sistem bintang jauh lainnya, sehingga SEMUA jarak di visualisasi ini konsisten satu sama lain
+        // dan pusat cakram/spiral galaksi TIDAK diletakkan di posisi Matahari (origin scene).
+        const JARAK_MATAHARI_KE_PUSAT_GALAKSI_LY = 26000;
+        const pusatGalaksi = posisiOrbitLuar(0, 1, JARAK_MATAHARI_KE_PUSAT_GALAKSI_LY, 0);
+
+        // Fungsi umum: membangun struktur 3D volumetrik sebuah galaksi spiral berpalang — palang (bar)
+        // tengah, 2 lengan spiral utama + 2 lengan minor, piringan difus bintang tua pengisi celah
+        // antar-lengan, dan halo bintang tua nyaris bulat berisi gumpalan menyerupai gugus bola.
+        // `skala` mengatur kepadatan (1 = penuh, dipakai Bima Sakti; nilai lebih kecil dipakai untuk
+        // galaksi jauh seperti Andromeda agar tetap ringan namun tak lagi terlihat "gambar tempel" datar).
+        // `parent` & `posisiLokal` memungkinkan grup ini ditempel sebagai anak dari grup galaksi lain
+        // (mis. grup visual Andromeda yang sudah dimiringkan) sehingga ikut mengikuti kemiringannya.
+        // Setiap partikel diberi warna uniknya sendiri (jitter hue/saturasi/lightness dari warna dasar)
+        // meniru peta warna bintang sesungguhnya hasil pemetaan ESA Gaia — tidak ada dua titik yang
+        // benar-benar identik warnanya, persis seperti pada video referensi Gaia DR3.
+        // ---------- SPRITE PARTIKEL BUNDAR & LEMBUT ----------
+        // Sebelumnya tiap "bintang" digambar sebagai KOTAK tegas (default THREE.PointsMaterial tanpa
+        // map) — saat ribuan kotak bertumpuk sepanjang lengan, hasilnya jadi PITA SOLID bertepi tajam
+        // seperti grafik/garis, bukan kabut berbutir lembut seperti pada foto asli Gaia. Sprite bundar
+        // dengan gradien radial (tajam di tengah, memudar ke tepi) membuat tiap titik berbaur secara
+        // organik dengan tetangganya — inilah yang menghasilkan tekstur "berkabut/grainy" khas foto
+        // astronomi, bukan bentuk geometris keras.
+        function buatTeksturPartikelBundar() {
+            const ukuran = 64;
+            const canvas = document.createElement('canvas');
+            canvas.width = ukuran; canvas.height = ukuran;
+            const ctx = canvas.getContext('2d');
+            const g = ctx.createRadialGradient(ukuran / 2, ukuran / 2, 0, ukuran / 2, ukuran / 2, ukuran / 2);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.3, 'rgba(255,255,255,0.9)');
+            g.addColorStop(0.65, 'rgba(255,255,255,0.28)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, ukuran, ukuran);
+            return new THREE.CanvasTexture(canvas);
+        }
+        const teksturPartikelBundar = buatTeksturPartikelBundar();
+
+        function warnaUnikPartikel(base, hJit = 0.02, sJit = 0.12, lJit = 0.12) {
+            const hsl = { h: 0, s: 0, l: 0 };
+            base.getHSL(hsl);
+            const h = (hsl.h + (Math.random() - 0.5) * hJit + 1) % 1;
+            const s = THREE.MathUtils.clamp(hsl.s + (Math.random() - 0.5) * sJit, 0, 1);
+            const l = THREE.MathUtils.clamp(hsl.l + (Math.random() - 0.5) * lJit, 0.04, 0.92);
+            return new THREE.Color().setHSL(h, s, l);
+        }
+
+        // Hash 2D deterministik (pseudo-noise) — dipakai untuk mengelompokkan warna per "petak" ruang,
+        // bukan acak per-partikel independen, sehingga muncul KONSENTRASI warna berdekatan yang jelas
+        // (gumpalan biru, gumpalan merah muda, dst) persis seperti pada animasi Gaia — bukan bintik acak.
+        function hashPetak(a, b) {
+            const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+            return v - Math.floor(v);
+        }
+
+        // Noise 2 lapis (skala besar + skala kecil dicampur) agar batas antar wilayah warna
+        // tidak terlihat seperti kotak-kotak grid, melainkan gumpalan organik yang meleleh/menyatu
+        // di tepinya — meniru pola konsentrasi warna pada animasi pemetaan bintang ESA Gaia.
+        // Noise 3 lapis (skala besar dominan + skala menengah + sedikit skala kecil) agar
+        // WILAYAH warna terbentuk besar & tegas (bukan bintik halus) namun tepinya tetap meleleh
+        // organik — meniru gumpalan biru/merah muda besar yang jelas terlihat pada animasi Gaia.
+        function zonaWarnaOrganik(sudutRad, radius, skalaSudut, skalaRadius, offset = 0) {
+            const besar = hashPetak(Math.floor(sudutRad * skalaSudut * 0.22) + offset, Math.floor(radius / (skalaRadius * 3.6)));
+            const kasar = hashPetak(Math.floor(sudutRad * skalaSudut * 0.5) + offset * 1.3, Math.floor(radius / (skalaRadius * 1.8)));
+            const halus = hashPetak(Math.floor(sudutRad * skalaSudut) * 3.7 + offset * 1.7, Math.floor(radius / skalaRadius) * 1.3);
+            return besar * 0.5 + kasar * 0.35 + halus * 0.15;
+        }
+
+        function buatStrukturGalaksiVolumetrik(radiusMaks, skala, palet, parent = scene, posisiLokal = new THREE.Vector3()) {
+            const grup = new THREE.Group();
+            grup.position.copy(posisiLokal);
+            parent.add(grup);
+
+            const su = radiusMaks / 13500; // faktor skala jarak relatif terhadap Bima Sakti
+            const warnaInti = new THREE.Color(palet.inti);
+            const warnaBar = new THREE.Color(palet.bar);
+            const warnaLenganMuda = new THREE.Color(palet.lenganMuda);
+            const warnaLenganTua = new THREE.Color(palet.lenganTua);
+            const warnaDisk = new THREE.Color(palet.disk);
+            const warnaHaloTua = new THREE.Color(palet.halo);
+            // Data Gaia terbaru menunjukkan palang pusat Bima Sakti lebih MIRING terhadap arah Matahari
+            // dari perkiraan lama — sudut dinaikkan agar sesuai temuan itu.
+            const sudutBar = 0.75;
+
+            // ---------- FUNGSI SPIRAL LOGARITMIK (BUKAN ARCHIMEDES) ----------
+            // PENTING: sebelumnya sudut lengan = radius * konstanta (spiral Archimedes/linear), yang
+            // membuat jarak antar putaran lengan SAMA RATA di semua radius — dari jauh ini terlihat
+            // sebagai CINCIN-CINCIN KONSENTRIS rapi (seperti piringan hitam), BUKAN lengan spiral yang
+            // melebar & merenggang ke tepi seperti galaksi nyata / animasi Gaia. Spiral galaksi sungguhan
+            // berbentuk LOGARITMIK: sudut ∝ ln(radius), sehingga lilitan rapat dekat inti dan merenggang
+            // di tepi — inilah yang menghasilkan bentuk kipas khas, bukan cincin.
+            const rDalamSpiral = 250 * su;
+            const kSpiralLog = 3.35;
+            function putaranSpiralLog(radius) {
+                return kSpiralLog * Math.log(Math.max(radius, rDalamSpiral * 1.01) / rDalamSpiral);
+            }
+
+            // ---------- 0) BULGE VOLUMETRIK (distribusi 3D Gaussian, bukan sekadar bola bercahaya) ----------
+            // density = exp(-(r*r)/(sigma*sigma)): sangat padat & terang di tengah, meluruh mulus ke luar,
+            // oval mengikuti arah bar ketika dilihat dari atas (face-on), dan menggembung tebal (scaleHeight
+            // vertikal jauh lebih besar dari cakram tipis) ketika dilihat dari samping (edge-on) — item 14 & 22.
+            function acakGaussian(mean = 0, std = 1) {
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random();
+                while (v === 0) v = Math.random();
+                return mean + std * Math.sqrt(-2 * Math.log(u)) * Math.cos(Math.PI * 2 * v);
+            }
+            const posBar = [], warnaBarArr = [];
+            const bulgeSigma = 780 * su;       // skala inti volumetrik
+            const bulgeElongasi = 1.55;        // oval mengikuti sumbu bar saat face-on
+            const bulgeSigmaVertikal = 430 * su; // JAUH lebih tebal dari piringan (yang skalanya puluhan*su)
+            const jumlahBulge = Math.round(26000 * skala);
+            for (let i = 0; i < jumlahBulge; i++) {
+                // sampling radial mengikuti profil exp(-(r/sigma)^2) via inverse-transform Rayleigh-like
+                const rSample = bulgeSigma * Math.sqrt(-Math.log(Math.max(Math.random(), 1e-6)));
+                const sudutLokal = Math.random() * Math.PI * 2;
+                const xLokal = Math.cos(sudutLokal) * rSample * bulgeElongasi;
+                const zLokal = Math.sin(sudutLokal) * rSample;
+                const x = xLokal * Math.cos(sudutBar) - zLokal * Math.sin(sudutBar);
+                const z = xLokal * Math.sin(sudutBar) + zLokal * Math.cos(sudutBar);
+                const rNormBulge = Math.min(rSample / (bulgeSigma * 2.1), 1);
+                // menggembung besar dekat pusat, menipis ke tepi (bentuk peanut/boxy saat edge-on)
+                const y = acakGaussian(0, bulgeSigmaVertikal * (1 - rNormBulge * 0.55));
+                posBar.push(x, y, z);
+                const rnd = Math.random();
+                const c = rnd > 0.992
+                    ? warnaUnikPartikel(new THREE.Color(0xfffaf0), 0.015, 0.08, 0.06) // inti paling terang, hampir putih-hangat
+                    : warnaUnikPartikel(new THREE.Color().lerpColors(warnaInti, warnaBar, rNormBulge * 0.7), 0.02, 0.14, 0.13);
+                const kedip = (0.95 - rNormBulge * 0.35) + Math.random() * 0.35;
+                warnaBarArr.push(c.r * kedip, c.g * kedip, c.b * kedip);
+            }
+
+            // ---------- 1) PALANG (BAR) TENGAH ----------
+            // Bar menyatu dengan bulge (item 16-17): fuzzy, oval, Gaussian terhadap sumbu bar,
+            // kepadatan tertinggi di tengah menurun mulus menuju ujung — bukan berbentuk balok tegas.
+            const jumlahBar = Math.round(30000 * skala);
+            for (let i = 0; i < jumlahBar; i++) {
+                const panjang = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 0.72) * 2500 * su;
+                const normPanjangBar = Math.min(Math.abs(panjang) / (2600 * su), 1);
+                const lebarMaksGauss = (1 - normPanjangBar * 0.74) * 185 * su;
+                const lebar = acakGaussian(0, lebarMaksGauss);
+                // Bulge pada foto referensi ESA (tampak edge-on) jauh lebih TEBAL/menggembung
+                // dibanding piringan tipis di sekelilingnya (bentuk "peanut/boxy") — falloff Gaussian
+                // agar menggembung besar di dekat pusat lalu meluruh mulus ke ujung palang (feathering, item 9).
+                const tinggi = acakGaussian(0, Math.max(280 * su - normPanjangBar * 240 * su, 20 * su));
+                const x = panjang * Math.cos(sudutBar) - lebar * Math.sin(sudutBar);
+                const z = panjang * Math.sin(sudutBar) + lebar * Math.cos(sudutBar);
+                posBar.push(x, tinggi, z);
+                const rnd = Math.random();
+                const c = rnd > 0.985
+                    ? warnaUnikPartikel(new THREE.Color(0xffb3d9), 0.03, 0.22, 0.12) // gumpalan HII langka dekat inti
+                    : warnaUnikPartikel(new THREE.Color().lerpColors(warnaInti, warnaBar, Math.random()), 0.02, 0.15, 0.14);
+                const kedip = (0.75 - normPanjangBar * 0.25) + Math.random() * 0.45;
+                warnaBarArr.push(c.r * kedip, c.g * kedip, c.b * kedip);
+            }
+            const geoBar = new THREE.BufferGeometry();
+            geoBar.setAttribute('position', new THREE.Float32BufferAttribute(posBar, 3));
+            geoBar.setAttribute('color', new THREE.Float32BufferAttribute(warnaBarArr, 3));
+            const matBar = new THREE.PointsMaterial({ map: teksturPartikelBundar, size: 3.1, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false, sizeAttenuation: true, blending: THREE.NormalBlending });
+            grup.add(new THREE.Points(geoBar, matBar));
+
+            // ---------- 2) ENAM LENGAN SPIRAL: 2 lengan UTAMA menonjol (Perseus & Scutum-Centaurus,
+            // padat & terang, banyak bintang muda + gumpalan HII) berseberangan menyambung ujung palang,
+            // + 4 lengan MINOR lebih redup/kurang menonjol di antaranya (Sagitarius, Norma, & dua lengan
+            // tambahan) — sesuai temuan ESA Gaia bahwa Bima Sakti punya LEBIH DARI DUA lengan spiral dan
+            // lengan-lengannya kurang menonjol dibanding perkiraan lama. Warna tidak lagi diacak per-titik
+            // independen, melainkan dikelompokkan per "petak" ruang (hashPetak) sehingga muncul gumpalan/
+            // KONSENTRASI warna berdekatan yang jelas — persis seperti pada animasi Gaia referensi. ----------
+            const posArr = [], warnaArr = [];
+            const jumlahLengan = 6;
+            const lenganUtama = [0, 3]; // dua lengan menonjol, berseberangan
+            const jumlahDasarPerLengan = [58000, 22000, 22000, 58000, 22000, 22000];
+            // ---------- ARM DENSITY FIELD (item 5-11) ----------
+            // Spiral logaritmik (putaranSpiralLog, TIDAK diubah) hanya dipakai sebagai CENTERLINE.
+            // Posisi partikel = centerline + Gaussian radial/tangensial (armDensity = exp(-(d²)/(2*armWidth²)))
+            // + noise multi-skala, sehingga arm menjadi AREA DENSITAS lembut (feathered), bukan garis tegas
+            // atau tepi keras, dan lebarnya SENDIRI melebar mulus menuju tepi galaksi (bukan konstan).
+            const radiusDalamLengan = 1000 * su;
+            for (let lengan = 0; lengan < jumlahLengan; lengan++) {
+                const utama = lenganUtama.includes(lengan);
+                const jumlahBintang = Math.round(jumlahDasarPerLengan[lengan] * skala);
+                const sudutDasar = (lengan / jumlahLengan) * Math.PI * 2 + sudutBar;
+                // Lebar dasar (dekat akar lengan) & pertumbuhan lebar menuju tepi — item 7.
+                const lebarDasarSudut = utama ? 0.075 : 0.1;
+                const pertumbuhanLebar = utama ? 0.15 : 0.21;
+                for (let i = 0; i < jumlahBintang; i++) {
+                    const rNorm = Math.pow(Math.random(), 1.6);
+                    const radius = radiusDalamLengan + rNorm * radiusMaks;
+                    const putaranSpiral = putaranSpiralLog(radius);
+                    const sudutCenterline = sudutDasar + putaranSpiral;
+
+                    // normalizedRadius (0..1) sepanjang cakram, dipakai untuk armWidth yang tumbuh smooth
+                    const radiusNormalisasi = THREE.MathUtils.clamp((radius - radiusDalamLengan) / radiusMaks, 0, 1);
+                    const armWidthSudut = lebarDasarSudut + pertumbuhanLebar * Math.pow(radiusNormalisasi, 1.3);
+
+                    // Noise multi-skala (rendah/sedang/tinggi) — variasi organik SUBTLE, bukan gelombang ular (item 10-11).
+                    const noiseRendah = hashPetak(Math.floor(radius / (1400 * su)), lengan * 13.1) - 0.5;
+                    const noiseSedang = hashPetak(Math.floor(sudutCenterline * 5) + lengan * 3.7, Math.floor(radius / (260 * su))) - 0.5;
+                    const noiseTinggi = (Math.random() - 0.5);
+                    const noiseTheta = noiseRendah * 0.05 + noiseSedang * 0.028 + noiseTinggi * 0.01;
+
+                    // Offset Gaussian tangensial terhadap centerline → distribusi densitas armDensity = exp(-(d²)/(2σ²)),
+                    // menghasilkan feathering (pusat padat & terang, menipis lembut ke tepi arm) alih-alih tepi tajam.
+                    const sudut = sudutCenterline + acakGaussian(0, armWidthSudut * 0.5) + noiseTheta;
+                    // Pada foto edge-on ESA, piringan/lengan tampak sebagai GARIS SANGAT TIPIS
+                    // dibanding gembungan bulge di tengah — ketebalan dasar & minimum dipangkas
+                    // jauh (260→130, 30→10) agar cakram jelas terlihat pipih, bukan tebal berisi.
+                    const tebalPiringan = ((1 - rNorm) * 130 * su + 10 * su) * 0.55;
+                    const y = acakGaussian(0, tebalPiringan * 0.5);
+                    posArr.push(Math.cos(sudut) * radius, y, Math.sin(sudut) * radius);
+
+                    // Zona warna organik: posisi di sepanjang lengan (bukan tiap bintang) menentukan jenis
+                    // populasi dominan, menghasilkan WILAYAH konsentrasi warna besar & jelas yang menyatu di
+                    // tepinya (bukan grid/bintik) — persis seperti gumpalan biru/merah muda pada animasi Gaia.
+                    const zona = zonaWarnaOrganik(sudutCenterline, radius, 7, 300 * su, lengan * 91.7);
+                    const rnd = Math.random();
+                    let c;
+                    const ambangHII = utama ? 0.17 : 0.09;
+                    const ambangMuda = utama ? 0.56 : 0.34;
+                    const ambangTua = utama ? 0.6 : 0.38;
+                    // Ambang "rnd" diperketat (nilai lebih kecil) supaya lebih sedikit titik yang
+                    // "lolos" dari zona dominannya — wilayah warna jadi terkonsentrasi & padat, bukan
+                    // bercampur-baur dengan warna lain di dalamnya.
+                    if (zona < ambangHII && rnd > 0.04) {
+                        c = warnaUnikPartikel(new THREE.Color(0xffb3d9), 0.04, 0.2, 0.11); // gumpalan HII merah muda
+                    } else if (zona < ambangMuda && rnd > 0.03) {
+                        c = warnaUnikPartikel(warnaLenganMuda, 0.04, 0.17, 0.15); // gugusan bintang muda biru-putih
+                    } else if (zona < ambangTua && rnd > 0.94) {
+                        c = warnaUnikPartikel(new THREE.Color(0xff7a4d), 0.03, 0.18, 0.11); // raksasa merah/oranye langka
+                    } else if (rnd > 0.985) {
+                        // percikan minoritas dari jenis lain agar tepi wilayah tidak terlalu tajam
+                        c = warnaUnikPartikel(warnaLenganMuda, 0.05, 0.2, 0.16);
+                    } else {
+                        c = warnaUnikPartikel(new THREE.Color().lerpColors(warnaLenganMuda, warnaLenganTua, 0.35 + Math.random() * 0.6), 0.03, 0.14, 0.15);
+                    }
+                    const kedip = (utama ? 0.78 : 0.55) + Math.random() * 0.42;
+                    warnaArr.push(c.r * kedip, c.g * kedip, c.b * kedip);
+                }
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(warnaArr, 3));
+            const mat = new THREE.PointsMaterial({ map: teksturPartikelBundar, size: 2.6, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, sizeAttenuation: true, blending: THREE.NormalBlending });
+            grup.add(new THREE.Points(geo, mat));
+
+            // ---------- 3) PIRINGAN DIFUS PENGISI CELAH ANTAR-LENGAN ----------
+            // Populasi bintang tua tersebar merata di seluruh cakram (bukan hanya di lengan) meniru
+            // populasi disk sesungguhnya, agar area di antara lengan spiral tidak terasa kosong.
+            const posDif = [], warnaDif = [];
+            const jumlahDifus = Math.round(80000 * skala);
+            for (let i = 0; i < jumlahDifus; i++) {
+                const rNorm = Math.pow(Math.random(), 2.05);
+                const radius = 450 * su + rNorm * radiusMaks;
+                const sudut = Math.random() * Math.PI * 2;
+                // Sama seperti lengan spiral: piringan difus dipipihkan (380→170, 50→16) supaya
+                // konsisten dengan garis cakram tipis pada foto referensi, bukan gumpalan tebal.
+                const tebalPiringan = ((1 - rNorm) * 170 * su + 16 * su) * 0.58;
+                const y = (Math.random() - 0.5) * tebalPiringan;
+                posDif.push(Math.cos(sudut) * radius, y, Math.sin(sudut) * radius);
+                // Wilayah difus juga dipetakan ke zona organik agar patch bintang-tua-kekuningan
+                // dan patch kebiruan-samar tampak mengumpul, bukan tersebar acak titik demi titik.
+                const zonaDif = zonaWarnaOrganik(sudut, radius, 4, 460 * su, 17.3);
+                const campur = THREE.MathUtils.clamp(zonaDif * 0.9 + Math.random() * 0.15, 0, 1);
+                const c = warnaUnikPartikel(new THREE.Color().lerpColors(warnaDisk, warnaLenganTua, campur), 0.02, 0.12, 0.16);
+                const kedip = 0.48 + Math.random() * 0.42;
+                warnaDif.push(c.r * kedip, c.g * kedip, c.b * kedip);
+            }
+            const geoDif = new THREE.BufferGeometry();
+            geoDif.setAttribute('position', new THREE.Float32BufferAttribute(posDif, 3));
+            geoDif.setAttribute('color', new THREE.Float32BufferAttribute(warnaDif, 3));
+            const matDif = new THREE.PointsMaterial({ map: teksturPartikelBundar, size: 2.1, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, sizeAttenuation: true, blending: THREE.NormalBlending });
+            grup.add(new THREE.Points(geoDif, matDif));
+
+            // ---------- 4) HALO BINTANG TUA + GUMPALAN MENYERUPAI GUGUS BOLA ----------
+            // Galaksi spiral dikelilingi halo bintang tua miskin logam berbentuk nyaris bulat yang
+            // menampung puluhan-ratusan gugus bola (Bima Sakti: ≈150 menurut katalog NASA/SIMBAD).
+            const posHalo = [], warnaHalo = [];
+            // Pada foto referensi, "Stellar halo" tersebar jarang/sparse, jauh melebihi tepi
+            // cakram, dan berbentuk hampir BULAT SEMPURNA (bukan gepeng) dengan warna jingga-cokelat
+            // redup, bukan pucat terang. Jumlah dikurangi (24000→15000) agar terasa jarang, jangkauan
+            // radius diperlebar (1.5→2.2×radiusMaks) agar melampaui cakram jauh seperti pada foto,
+            // pemipihan dilonggarkan (0.75→0.92) agar mendekati bulat, dan kecerlangan diredupkan
+            // (0.42-0.82 → 0.18-0.42) agar tidak menyaingi terangnya bulge/cakram.
+            const jumlahHaloBase = Math.round(15000 * skala);
+            for (let i = 0; i < jumlahHaloBase; i++) {
+                const u = Math.random(), v = Math.random();
+                const theta = u * Math.PI * 2;
+                const phi = Math.acos(2 * v - 1);
+                const rNorm = Math.pow(Math.random(), 0.6);
+                const radius = 1800 * su + rNorm * radiusMaks * 2.2;
+                posHalo.push(radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi) * 0.92, radius * Math.sin(phi) * Math.sin(theta));
+                const c = warnaUnikPartikel(warnaHaloTua, 0.02, 0.12, 0.15);
+                const kedip = 0.18 + Math.random() * 0.24;
+                warnaHalo.push(c.r * kedip, c.g * kedip, c.b * kedip);
+            }
+            const jumlahGugusBola = Math.max(8, Math.round(120 * skala));
+            for (let g = 0; g < jumlahGugusBola; g++) {
+                const u = Math.random(), v = Math.random();
+                const theta = u * Math.PI * 2;
+                const phi = Math.acos(2 * v - 1);
+                const radius = 2400 * su + Math.random() * radiusMaks * 1.9;
+                const cx2 = radius * Math.sin(phi) * Math.cos(theta);
+                const cy2 = radius * Math.cos(phi) * 0.92;
+                const cz2 = radius * Math.sin(phi) * Math.sin(theta);
+                const warnaGugus = warnaUnikPartikel(warnaHaloTua, 0.03, 0.15, 0.1);
+                for (let p = 0; p < 36; p++) {
+                    posHalo.push(cx2 + (Math.random() - 0.5) * 65 * su, cy2 + (Math.random() - 0.5) * 65 * su, cz2 + (Math.random() - 0.5) * 65 * su);
+                    const c = warnaUnikPartikel(warnaGugus, 0.015, 0.1, 0.1);
+                    const kedip = 0.55 + Math.random() * 0.4;
+                    warnaHalo.push(c.r * kedip, c.g * kedip, c.b * kedip);
+                }
+            }
+            const geoHalo = new THREE.BufferGeometry();
+            geoHalo.setAttribute('position', new THREE.Float32BufferAttribute(posHalo, 3));
+            geoHalo.setAttribute('color', new THREE.Float32BufferAttribute(warnaHalo, 3));
+            const matHalo = new THREE.PointsMaterial({ map: teksturPartikelBundar, size: 2.5, vertexColors: true, transparent: true, opacity: 0.5, depthWrite: false, sizeAttenuation: true, blending: THREE.NormalBlending });
+            grup.add(new THREE.Points(geoHalo, matHalo));
+
+            // ---------- 5) OBJEK PENGISI TAMBAHAN: gugusan bintang muda (OB association) padat +
+            // untaian debu kemerahan-cokelat menyusuri lengan, ditebar di SETIAP bagian galaksi agar
+            // tidak ada area yang terasa kosong — meniru kepadatan visual pada animasi Gaia. ----------
+            const posIsi = [], warnaIsi = [];
+            const jumlahKlumpuk = Math.max(24, Math.round(320 * skala));
+            for (let k = 0; k < jumlahKlumpuk; k++) {
+                const lengan = Math.floor(Math.random() * jumlahLengan);
+                const utama = lengan % 2 === 0;
+                const sudutDasar = (lengan / jumlahLengan) * Math.PI * 2 + sudutBar;
+                const rNorm = 0.07 + Math.random() * 0.9;
+                const radius = 1000 * su + rNorm * radiusMaks;
+                const putaranSpiral = putaranSpiralLog(radius);
+                const sudut = sudutDasar + putaranSpiral + (Math.random() - 0.5) * 0.1;
+                const pusatX = Math.cos(sudut) * radius;
+                const pusatZ = Math.sin(sudut) * radius;
+                const pusatY = (Math.random() - 0.5) * 24 * su;
+                const warnaKlp = Math.random() < 0.4
+                    ? warnaUnikPartikel(new THREE.Color(0xffb3d9), 0.04, 0.2, 0.1)
+                    : warnaUnikPartikel(warnaLenganMuda, 0.05, 0.18, 0.14);
+                const jumlahAnggota = 18 + Math.floor(Math.random() * 26);
+                for (let a = 0; a < jumlahAnggota; a++) {
+                    const sebar = 22 * su;
+                    posIsi.push(pusatX + (Math.random() - 0.5) * sebar, pusatY + (Math.random() - 0.5) * sebar * 0.5, pusatZ + (Math.random() - 0.5) * sebar);
+                    const c = warnaUnikPartikel(warnaKlp, 0.02, 0.1, 0.15);
+                    const kedip = (utama ? 0.7 : 0.5) + Math.random() * 0.45;
+                    warnaIsi.push(c.r * kedip, c.g * kedip, c.b * kedip);
+                }
+            }
+            const jumlahDebuArm = Math.round(15000 * skala);
+            for (let i = 0; i < jumlahDebuArm; i++) {
+                const lengan = lenganUtama[Math.floor(Math.random() * lenganUtama.length)]; // hanya menyusuri lengan utama
+                const sudutDasar = (lengan / jumlahLengan) * Math.PI * 2 + sudutBar + 0.33;
+                const rNorm = Math.pow(Math.random(), 1.3);
+                const radius = 900 * su + rNorm * radiusMaks * 0.92;
+                const putaranSpiral = putaranSpiralLog(radius);
+                const sudut = sudutDasar + putaranSpiral + (Math.random() - 0.5) * 0.15;
+                const y = (Math.random() - 0.5) * 18 * su;
+                posIsi.push(Math.cos(sudut) * radius, y, Math.sin(sudut) * radius);
+                const c = warnaUnikPartikel(new THREE.Color(0x3a2a22), 0.03, 0.25, 0.12);
+                const kedip = 0.5 + Math.random() * 0.4;
+                warnaIsi.push(c.r * kedip, c.g * kedip, c.b * kedip);
+            }
+            const geoIsi = new THREE.BufferGeometry();
+            geoIsi.setAttribute('position', new THREE.Float32BufferAttribute(posIsi, 3));
+            geoIsi.setAttribute('color', new THREE.Float32BufferAttribute(warnaIsi, 3));
+            const matIsi = new THREE.PointsMaterial({ map: teksturPartikelBundar, size: 2.4, vertexColors: true, transparent: true, opacity: 0.7, depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending });
+            grup.add(new THREE.Points(geoIsi, matIsi));
+
+            return grup;
+        }
+
+        function bangunStarfieldGalaksi(pusat) {
+            const radiusMaks = 13500; // Radius cakram dibuat besar agar posisi Matahari jatuh di pinggiran, bukan di dekat inti.
+            // Palet warna disesuaikan langsung dengan foto referensi ESA "Anatomy of the Milky Way":
+            // bulge putih-keemasan cerah, cakram/lengan biru-putih dingin, dan HALO diubah dari
+            // pucat krem (hampir putih) menjadi cokelat-jingga redup — pada foto, titik-titik di
+            // halo tampak jelas berwarna kemerahan/jingga tua (populasi bintang tua miskin logam),
+            // bukan pucat seperti bulge.
+            const grup = buatStrukturGalaksiVolumetrik(radiusMaks, 1, {
+                inti: 0xfff6dd, bar: 0xffecc4, lenganMuda: 0xa9cdff, lenganTua: 0xe4c79c, disk: 0xc3b599, halo: 0xcf8f60
+            }, scene, pusat);
+
+            // Titik interaktif tunggal mewakili PUSAT galaksi (di lokasi Sagittarius A*, bukan di lokasi Matahari)
+            const penandaGalaksi = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 12), new THREE.MeshBasicMaterial({ color: 0xfff2c8, transparent: true, opacity: 0.25 }));
+            penandaGalaksi.position.set(0, 550, 0);
+            penandaGalaksi.userData = {
+                nama: "Galaksi Bima Sakti (Milky Way)",
+                tipe: "Galaksi Spiral Berpalang (SBbc) — Struktur Penuh",
+                desc: "Ratusan ribu titik cahaya tersusun membentuk palang (bar) tengah, dua lengan spiral utama (Perseus & Scutum-Centaurus), dua lengan minor (Sagitarius & Norma), piringan difus bintang tua pengisi celah antar-lengan, serta halo bintang tua nyaris bulat berisi gumpalan menyerupai gugus bola — meniru struktur nyata Bima Sakti berdasarkan pemetaan ESA Gaia dan ilustrasi NASA/JPL-Caltech. Pusatnya diletakkan tepat di lokasi lubang hitam Sagittarius A*, ≈26.000 tahun cahaya dari Matahari — BUKAN di lokasi Tata Surya kita.",
+                fakta: "Bima Sakti diperkirakan mengandung 100-400 miliar bintang dengan diameter piringan ≈100.000-200.000 tahun cahaya, dikelilingi halo yang menampung ≈150 gugus bola; Tata Surya kita terletak jauh dari inti galaksi, di Lengan/Taji Orion, salah satu lengan kecil di antara lengan Sagitarius dan Perseus.",
+                data: { "Tipe galaksi": "Spiral berpalang (SBbc)", "Perkiraan jumlah bintang": "100-400 miliar", "Diameter piringan": "≈100.000-200.000 tahun cahaya", "Jarak Matahari ke pusat": "≈26.000 tahun cahaya", "Jumlah gugus bola di halo": "≈150 (katalog)" },
+                sumber: "NASA/JPL-Caltech · ESA Gaia Mission"
+            };
+            objekInteraktif.push(penandaGalaksi);
+            grup.add(penandaGalaksi);
+
+            return grup;
+        }
+        const starfieldGalaksi = bangunStarfieldGalaksi(pusatGalaksi);
+
+        // ==========================================
+        // VISUAL FOTOGRAFIS GALAKSI BIMA SAKTI (dimiringkan, inti keemasan, lengan spiral, pita debu)
+        // menyerupai citra referensi, ditambah dua galaksi katai pendamping nyata: LMC & SMC.
+        // ==========================================
+        const grupVisualBimaSakti = buatGalaksiVisual(
+            "Galaksi Bima Sakti (Milky Way)", pusatGalaksi, 2600, 1.15, 0.4,
+            { inti: '#fff2d6', lengan: '#ffd9a0', debu: '#241f1a', biru: '#9ec2ff' },
+            {
+                tipe: "Galaksi Spiral Berpalang (SBbc) — Visual Fotografis",
+                desc: "Visual bertekstur yang meniru tampilan galaksi spiral dilihat dari luar dengan perspektif miring, gaya warna, dan pita debu menyerupai citra fotografi astronomi asli — melengkapi struktur titik-titik bintang latar Bima Sakti di sekelilingnya.",
+                fakta: "Karena kita berada DI DALAM piringan Bima Sakti, manusia tidak pernah benar-benar memotretnya dari luar seperti ini — citra 'tampak luar' Bima Sakti selalu berupa ilustrasi/simulasi berdasarkan data, bukan foto langsung.",
+                data: { "Tipe galaksi": "Spiral berpalang (SBbc)", "Diameter piringan": "≈100.000-200.000 tahun cahaya" },
+                sumber: "NASA / ESA Gaia Mission (ilustrasi berbasis data)"
+            },
+            [
+                { nama: "Awan Magellan Besar (LMC)", warna: '#ffe9c2', ukuran: 260, x: 1400, y: -650 },
+                { nama: "Awan Magellan Kecil (SMC)", warna: '#ffe0c8', ukuran: 150, x: 1800, y: -900 }
+            ]
+        );
+
+        // ==========================================
+        // GALAKSI ANDROMEDA (M31) — tetangga spiral raksasa Bima Sakti, lengkap dengan galaksi
+        // katai pendamping M32 & M110, diposisikan jauh terpisah dengan skala visual dipadatkan
+        // (jarak asli ≈2,5 juta tahun cahaya) agar tetap terlihat dalam satu adegan.
+        // ==========================================
+        const arahAndromeda = new THREE.Vector3(-0.6, 0.22, 0.78).normalize();
+        const JARAK_VISUAL_ANDROMEDA = 22000;
+        const posisiAndromeda = arahAndromeda.multiplyScalar(JARAK_VISUAL_ANDROMEDA);
+        const grupVisualAndromeda = buatGalaksiVisual(
+            "Galaksi Andromeda (M31)", posisiAndromeda, 3600, 1.3, 0.55,
+            { inti: '#fff0d0', lengan: '#f0cf9a', debu: '#20180f', biru: '#a8c8ff' },
+            dbSemesta["Galaksi Andromeda (M31)"],
+            [
+                { nama: "M32 (Galaksi Katai Andromeda)", warna: '#fff2da', ukuran: 420, x: 1900, y: 1100 },
+                { nama: "M110 (Galaksi Katai Andromeda)", warna: '#f0e2c8', ukuran: 650, x: -1200, y: -2600 }
+            ]
+        );
+
+        // Struktur bintang volumetrik untuk Andromeda (ditempel sebagai anak grupVisualAndromeda yang
+        // sudah dimiringkan, sehingga otomatis ikut kemiringan & rotasinya) — dibuat dengan kepadatan
+        // lebih ringan (skala 0.3) karena hanya berfungsi memberi kedalaman/volume pada tampilan,
+        // supaya Andromeda tidak lagi terlihat sekadar tekstur foto datar seperti sebelumnya.
+        const grupTitikAndromeda = buatStrukturGalaksiVolumetrik(3400, 0.3, {
+            inti: 0xfff0d0, bar: 0xf5dcae, lenganMuda: 0xa8c8ff, lenganTua: 0xf0cf9a, disk: 0xcbb896, halo: 0xf0e2c8
+        }, grupVisualAndromeda, new THREE.Vector3());
+
+        // Penanda "Lokasi Tata Surya Kita" — cincin halus di sekitar Matahari yang tetap terlihat jelas
+        // saat kamera di-zoom out jauh, agar posisi asli Matahari di dalam cakram galaksi (bukan di pusat)
+        // selalu mudah ditemukan.
+        const penandaLokasiKita = new THREE.Mesh(
+            new THREE.RingGeometry(34, 40, 48),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+        );
+        penandaLokasiKita.rotation.x = Math.PI / 2;
+        penandaLokasiKita.userData = {
+            nama: "Lokasi Tata Surya Kita",
+            tipe: "Penanda Posisi — Lengan Orion",
+            desc: "Menandai posisi sebenarnya Matahari dan Tata Surya kita di dalam cakram Galaksi Bima Sakti: bukan di pusat galaksi, melainkan di kawasan pinggiran bernama Lengan Orion (Orion Arm/Spur), sekitar dua pertiga jarak dari inti ke tepi cakram.",
+            fakta: "Untuk mengelilingi pusat galaksi satu kali penuh (satu 'tahun galaksi'), Matahari membutuhkan waktu ≈225-250 juta tahun — sejak Matahari terbentuk, ia baru menyelesaikan ≈18-20 kali putaran mengelilingi Bima Sakti.",
+            data: { "Jarak ke pusat galaksi (Sgr A*)": "≈26.000 tahun cahaya", "Lokasi": "Lengan/Taji Orion", "Satu 'tahun galaksi'": "≈225-250 juta tahun" },
+            sumber: "NASA / ESA Gaia Mission"
+        };
+        objekInteraktif.push(penandaLokasiKita);
+        scene.add(penandaLokasiKita);
+
+        const kF = 0.2;
+        const matahari = buatBendaLangit("Matahari", 7, new THREE.MeshBasicMaterial({ map: buatTeksturBintang('#ffdd33', '#fff5b0') }), 0, 0);
+
+        // Planet Tata Surya
+        const merkurius = buatBendaLangit("Merkurius", 0.5, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#9a9a9a', 70) }), 11, 0.02 * kF);
+        const venus     = buatBendaLangit("Venus", 0.9, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#e3bb76', 15, '#c99a52') }), 16, 0.007 * kF);
+        const bumi      = buatBendaLangit("Bumi", 1.1, new THREE.MeshStandardMaterial({ map: buatTeksturBumi() }), 23, 0.005 * kF);
+        const mars      = buatBendaLangit("Mars", 0.7, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#b23a15', 40, '#7a2a10') }), 30, 0.004 * kF);
+
+        // ==========================================
+        // TATA SURYA KEDUA: ALPHA CENTAURI (Terdekat)
+        // ==========================================
+        const centauriGroup = new THREE.Group();
+        centauriGroup.position.set(450, 30, 200);
+        scene.add(centauriGroup);
+
+        const alphaACenter = new THREE.Mesh(
+            new THREE.SphereGeometry(5.5, 18, 18), 
+            new THREE.MeshBasicMaterial({ color: 0xffcc33 })
+        );
+        alphaACenter.userData = {
+            nama: "Alpha Centauri A",
+            tipe: dbSemesta["Alpha Centauri A"].tipe,
+            desc: dbSemesta["Alpha Centauri A"].desc,
+            fakta: dbSemesta["Alpha Centauri A"].fakta,
+            data: dbSemesta["Alpha Centauri A"].data,
+            sumber: "NASA / ESA"
+        };
+        objekInteraktif.push(alphaACenter);
+        centauriGroup.add(alphaACenter);
+
+        const centauriBPivot = new THREE.Group();
+        centauriGroup.add(centauriBPivot);
+        const alphaBCenter = new THREE.Mesh(
+            new THREE.SphereGeometry(4.0, 18, 18), 
+            new THREE.MeshBasicMaterial({ color: 0xff9933 })
+        );
+        alphaBCenter.position.x = 25;
+        alphaBCenter.userData = {
+            nama: "Alpha Centauri B",
+            tipe: dbSemesta["Alpha Centauri B"].tipe,
+            desc: dbSemesta["Alpha Centauri B"].desc,
+            fakta: dbSemesta["Alpha Centauri B"].fakta,
+            data: dbSemesta["Alpha Centauri B"].data,
+            sumber: "NASA / ESA"
+        };
+        objekInteraktif.push(alphaBCenter);
+        centauriBPivot.add(alphaBCenter);
+
+        const planetCentauri1 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.8, 12, 12),
+            new THREE.MeshStandardMaterial({ color: 0x3399cc })
+        );
+        planetCentauri1.position.x = 12;
+        planetCentauri1.userData = {
+            nama: "Centauri Prime (Kandidat)",
+            tipe: "Planet Eksotik Tata Surya Alpha Centauri",
+            desc: "Dunia hipotetis yang mengorbit komponen utama sistem bintang Alpha Centauri.",
+            fakta: "Sistem bintang ganda ini menjadi salah satu target utama misi pencarian exoplanet layak huni di masa depan.",
+            data: { "Sistem Bintang": "Alpha Centauri", "Jarak": "≈4,37 Tahun Cahaya" },
+            sumber: "Simulasi Visual Tata Surya Terdekat"
+        };
+        objekInteraktif.push(planetCentauri1);
+        centauriGroup.add(planetCentauri1);
+
+        // ==========================================
+        // BULAN-BULAN ALAMI TATA SURYA KITA
+        // ==========================================
+        const semuaBulanAlami = [];
+        semuaBulanAlami.push(buatBendaLangit("Bulan", 0.27, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#c9c9c9', 60) }), 2.2, 0.015 * kF, bumi.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Phobos", 0.13, new THREE.MeshStandardMaterial({ color: 0x8a7a6a }), 1.3, 0.05 * kF, mars.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Deimos", 0.09, new THREE.MeshStandardMaterial({ color: 0x9a8a7a }), 1.9, 0.03 * kF, mars.mesh));
+
+        // Sabuk Asteroid (objek bernama besar)
+        const asteroidBeltGroup = new THREE.Group();
+        scene.add(asteroidBeltGroup);
+
+        const listNamaAsteroid = ["Ceres", "Pallas", "Vesta", "Hygiea", "Interamnia", "52 Europa", "Davida", "Sylvia", "Euphrosyne", "Patientia", "Cybele", "Thisbe", "Hektor"];
+        const matAst = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 });
+
+        for(let i = 0; i < listNamaAsteroid.length; i++) {
+            let rOrb = 34 + Math.random() * 5;
+            let angle = Math.random() * Math.PI * 2;
+            let astMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.32, 0), matAst);
+            astMesh.position.set(Math.cos(angle) * rOrb, (Math.random() - 0.5) * 2, Math.sin(angle) * rOrb);
+            const namaAst = listNamaAsteroid[i];
+            const infoDB = dbSemesta[namaAst];
+            astMesh.userData = { nama: namaAst, tipe: infoDB.tipe, desc: infoDB.desc, fakta: infoDB.fakta, data: infoDB.data || null, sumber: "IAU Minor Planet Center" };
+            objekInteraktif.push(astMesh);
+            asteroidBeltGroup.add(astMesh);
+        }
+
+        // ==========================================
+        // 500 ASTEROID PROSEDURAL BERANEKA JENIS (Sabuk Utama Mars-Jupiter, Trojan Jupiter, Dekat Bumi)
+        // ==========================================
+        const trojanBeltGroup = new THREE.Group(); scene.add(trojanBeltGroup);
+        const neaGroup = new THREE.Group(); scene.add(neaGroup);
+
+        for (let i = 0; i < 420; i++) {
+            buatAsteroidProsedural(i + 1, 33, 41, 3.5, asteroidBeltGroup, "Sabuk Utama");
+        }
+        for (let i = 0; i < 55; i++) {
+            // Kelompok Trojan Jupiter, mengelompok di dua "kubu" L4/L5 di depan & belakang orbit Jupiter (visual disederhanakan)
+            const kubu = i % 2 === 0 ? 1.0 : -1.0;
+            const sudutDasar = kubu * 1.05;
+            const jarak = 45.5 + Math.random() * 1.5;
+            const sudut = sudutDasar + (Math.random() - 0.5) * 0.9;
+            const mesh = buatAsteroidProsedural(i + 1, jarak, jarak, 2.5, trojanBeltGroup, "Trojan Jupiter");
+            mesh.position.set(Math.cos(sudut) * jarak, mesh.position.y, Math.sin(sudut) * jarak);
+            mesh.userData.tipe += " (Titik Lagrange Jupiter)";
+        }
+        for (let i = 0; i < 25; i++) {
+            buatAsteroidProsedural(i + 1, 18, 32, 4, neaGroup, "Asteroid Dekat Bumi (NEA)");
+        }
+
+        const jupiter   = buatBendaLangit("Jupiter", 2.5, new THREE.MeshStandardMaterial({ map: buatTeksturGasRaksasa(['#d9822b','#e8a55a','#c9711f','#f0c087','#b8641a'], 8) }), 46, 0.0017 * kF);
+        const saturnus  = buatBendaLangit("Saturnus", 2.0, new THREE.MeshStandardMaterial({ map: buatTeksturGasRaksasa(['#e6cc85','#f0dca0','#d4b56e','#ede0b8'], 6) }), 60, 0.0012 * kF);
+        const uranus    = buatBendaLangit("Uranus", 1.4, new THREE.MeshStandardMaterial({ map: buatTeksturGasRaksasa(['#66ccff','#7fd4ff','#4fb8ec','#8ddcff'], 3) }), 74, 0.0009 * kF);
+        const neptunus  = buatBendaLangit("Neptunus", 1.4, new THREE.MeshStandardMaterial({ map: buatTeksturGasRaksasa(['#3366ff','#4a7bff','#274fd1','#5c8cff'], 4) }), 86, 0.0006 * kF);
+
+        semuaBulanAlami.push(buatBendaLangit("Io", 0.32, new THREE.MeshStandardMaterial({ color: 0xd9c14a }), 3.2, 0.045 * kF, jupiter.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Europa", 0.28, new THREE.MeshStandardMaterial({ color: 0xd8cfc0 }), 4.0, 0.036 * kF, jupiter.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Ganymede", 0.47, new THREE.MeshStandardMaterial({ color: 0x9a8f7d }), 5.0, 0.028 * kF, jupiter.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Callisto", 0.43, new THREE.MeshStandardMaterial({ color: 0x716857 }), 6.1, 0.02 * kF, jupiter.mesh));
+
+        const satCincin = new THREE.Mesh(new THREE.RingGeometry(2.4, 3.8, 24), new THREE.MeshStandardMaterial({ color: 0xccb366, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }));
+        satCincin.rotation.x = Math.PI / 2; saturnus.mesh.add(satCincin);
+
+        semuaBulanAlami.push(buatBendaLangit("Mimas", 0.14, new THREE.MeshStandardMaterial({ color: 0xbdbdbd }), 4.3, 0.05 * kF, saturnus.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Enceladus", 0.18, new THREE.MeshStandardMaterial({ color: 0xf0f0f5 }), 4.9, 0.042 * kF, saturnus.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Titan", 0.52, new THREE.MeshStandardMaterial({ color: 0xe0a95c }), 6.0, 0.025 * kF, saturnus.mesh));
+
+        semuaBulanAlami.push(buatBendaLangit("Miranda", 0.14, new THREE.MeshStandardMaterial({ color: 0xa9a9b8 }), 2.0, 0.05 * kF, uranus.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Titania", 0.32, new THREE.MeshStandardMaterial({ color: 0xbfb6ad }), 3.0, 0.03 * kF, uranus.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Oberon", 0.31, new THREE.MeshStandardMaterial({ color: 0x9d968d }), 3.8, 0.024 * kF, uranus.mesh));
+        semuaBulanAlami.push(buatBendaLangit("Triton", 0.38, new THREE.MeshStandardMaterial({ color: 0xcdd7e0 }), 2.6, -0.03 * kF, neptunus.mesh));
+
+        const pluto = buatBendaLangit("Pluto", 0.6, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#b3866b', 25, '#e8ddc8') }), 100, 0.0005 * kF);
+        semuaBulanAlami.push(buatBendaLangit("Charon", 0.32, new THREE.MeshStandardMaterial({ color: 0x8f8f8f }), 1.5, 0.02 * kF, pluto.mesh));
+
+        // Satelit Buatan
+        const semuaSatelitBuatan = [];
+        semuaSatelitBuatan.push(buatSatelitBuatan("ISS (Stasiun Luar Angkasa Internasional)", 0.12, 0xf2f2f2, 1.35, 0.09 * kF, bumi.mesh, {
+            nama: "ISS (Stasiun Luar Angkasa Internasional)",
+            tipe: "Satelit Buatan Manusia - Stasiun Antariksa",
+            desc: "Laboratorium orbital hasil kerja sama NASA, Roscosmos, ESA, JAXA, dan CSA yang telah dihuni terus-menerus sejak November 2000.",
+            fakta: "Mengorbit Bumi pada ketinggian ±400 km dan menyelesaikan satu putaran penuh hanya dalam ±92 menit.",
+            data: { "Ketinggian orbit": "≈400 km", "Periode orbit": "≈92 menit" }
+        }));
+
+        semuaSatelitBuatan.push(buatSatelitBuatan("Hubble Space Telescope", 0.1, 0xdfe6f0, 1.55, 0.07 * kF, bumi.mesh, dbSemesta["Hubble Space Telescope"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("James Webb Space Telescope", 0.16, 0xd4af37, 8.4, 0.006 * kF, bumi.mesh, dbSemesta["James Webb Space Telescope"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("Satelit GPS (Navstar)", 0.08, 0x66d9ef, 1.9, 0.045 * kF, bumi.mesh, dbSemesta["Satelit GPS (Navstar)"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("Satelit GPS (Navstar) #2", 0.08, 0x66d9ef, 1.9, 0.045 * kF, bumi.mesh, dbSemesta["Satelit GPS (Navstar)"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("Chandra X-ray Observatory", 0.09, 0xffe4b5, 5.6, 0.012 * kF, bumi.mesh, dbSemesta["Chandra X-ray Observatory"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("TESS", 0.07, 0x77ddaa, 3.4, 0.018 * kF, bumi.mesh, dbSemesta["TESS"]));
+        for (let i = 0; i < 6; i++) {
+            const s = buatSatelitBuatan(`Konstelasi Starlink #${i+1}`, 0.06, 0x88ccff, 1.42, (0.11 + i*0.006) * kF, bumi.mesh, dbSemesta["Konstelasi Starlink"]);
+            s.pivot.rotation.y = (i / 6) * Math.PI * 2;
+            semuaSatelitBuatan.push(s);
+        }
+        // Perseverance sebagai "satelit"/wahana permukaan yang mengorbit rendah simbolis di Mars
+        semuaSatelitBuatan.push(buatSatelitBuatan("Perseverance", 0.07, 0xcc6633, 0.85, 0.06 * kF, mars.mesh, dbSemesta["Perseverance"]));
+        // Juno mengorbit Jupiter, Cassini divisualkan mengorbit Saturnus (posisi historis)
+        semuaSatelitBuatan.push(buatSatelitBuatan("Juno", 0.1, 0xffcc66, 3.4, 0.03 * kF, jupiter.mesh, dbSemesta["Juno"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("Cassini", 0.1, 0xffddaa, 3.0, 0.022 * kF, saturnus.mesh, dbSemesta["Cassini"]));
+        semuaSatelitBuatan.push(buatSatelitBuatan("Europa Clipper", 0.09, 0x99ccff, 4.6, 0.02 * kF, jupiter.mesh, dbSemesta["Europa Clipper"]));
+
+        // Wahana antariksa jauh (posisi statis relatif merepresentasikan arah & jarak keberangkatannya dari Tata Surya)
+        buatWahanaJauh("Voyager 1", new THREE.Vector3(-125, 60, -105), 2.0);
+        buatWahanaJauh("Voyager 2", new THREE.Vector3(-95, -70, 118), 1.9);
+        buatWahanaJauh("New Horizons", new THREE.Vector3(118, 10, -70), 1.6);
+        buatWahanaJauh("Parker Solar Probe", new THREE.Vector3(6.5, 1.5, 3.5), 0.9);
+        buatWahanaJauh("Pioneer 10", new THREE.Vector3(-160, 15, 60), 1.5);
+        buatWahanaJauh("Pioneer 11", new THREE.Vector3(90, -40, -150), 1.5);
+
+        // ==========================================
+        // STRUKTUR LENGAN MILKY WAY (kerangka lama, dipertahankan sebagai penanda interaktif tambahan
+        // di atas starfield raksasa yang baru dibangun di bangunStarfieldGalaksi())
+        // ==========================================
+        const milkyWayGroup = new THREE.Group();
+        // Grup ini diposisikan pada `pusatGalaksi` (lokasi Sagittarius A*) — sama seperti starfield
+        // utama — dengan seluruh anaknya memakai koordinat LOKAL, sehingga rotasi lambatnya nanti
+        // berputar mengelilingi pusat galaksi sungguhan, bukan mengelilingi posisi Matahari.
+        milkyWayGroup.position.copy(pusatGalaksi);
+        scene.add(milkyWayGroup);
+
+        const geoMw = new THREE.SphereGeometry(0.6, 6, 6);
+        const matMw = new THREE.MeshBasicMaterial({ color: 0x444466, transparent: true, opacity: 0.6 });
+
+        for (let arm = 0; arm < 4; arm++) {
+            const armAngleOffset = (arm / 4) * Math.PI * 2;
+            for (let j = 0; j < 120; j++) {
+                const distance = 250 + j * 100;
+                const spiralAngle = armAngleOffset + j * 0.024;
+                
+                const x = Math.cos(spiralAngle) * distance;
+                const z = Math.sin(spiralAngle) * distance;
+                const y = (Math.random() - 0.5) * 90;
+
+                const mwNode = new THREE.Mesh(geoMw, matMw);
+                mwNode.position.set(x, y, z);
+                mwNode.userData = {
+                    nama: `Kerangka Milky Way Sektor ${arm + 1}-${j}`,
+                    tipe: "Struktur Lengan Galaksi Bima Sakti",
+                    desc: "Titik struktur kosmik yang membentuk pola spiral galaksi rumah kita ketika diamati dari jarak jauh (Zoom Out).",
+                    fakta: "Galaksi Bima Sakti adalah galaksi spiral berpalang dengan diameter diperkirakan sekitar 100.000 hingga 200.000 tahun cahaya.",
+                    data: { "Tipe Galaksi": "Spiral Berpalang (SBbc)" },
+                    sumber: "Simulasi Struktur Galaksi"
+                };
+                objekInteraktif.push(mwNode);
+                milkyWayGroup.add(mwNode);
+            }
+        }
+
+        // ==========================================
+        // PROXIMA CENTAURI + PROXIMA CENTAURI B
+        // ==========================================
+        const posisiProxima = new THREE.Vector3(centauriGroup.position.x + 38, centauriGroup.position.y - 12, centauriGroup.position.z - 22);
+        const proximaMesh = buatBintangAsing("Proxima Centauri", posisiProxima, 1.6, '#ff5533');
+        buatEksoplanetAsing("Proxima Centauri b", proximaMesh, 3.2, 0.55, 0xc98a5e, 0.006);
+
+        // ==========================================
+        // SISTEM BINTANG & EKSOPLANET JAUH LAINNYA
+        // ==========================================
+        function posisiOrbitLuar(index, total, jarakTahunCahaya, offsetSudut = 0.5) {
+            const sudut = (index / total) * Math.PI * 2 + offsetSudut;
+            const radiusVisual = 420 + Math.sqrt(jarakTahunCahaya) * 42;
+            const y = 15 + Math.sin(index * 2.3) * 70;
+            return new THREE.Vector3(Math.cos(sudut) * radiusVisual, y, Math.sin(sudut) * radiusVisual);
+        }
+
+        const daftarSistemAsing = [
+            { nama: "Barnard's Star", ly: 5.96, warna: '#ff9966', radius: 3.0,
+              planet: [{ nama: "Barnard's Star b", ukuran: 0.5, warna: 0x9a6b55, orbit: 6, kec: 0.0035 }] },
+            { nama: "Sirius A", ly: 8.6, warna: '#cfe8ff', radius: 6.2,
+              pendamping: { nama: "Sirius B", warna: '#eef1ff', radius: 1.3, orbit: 13, kec: 0.003 } },
+            { nama: "Wolf 359", ly: 7.86, warna: '#ff6644', radius: 1.8 },
+            { nama: "51 Pegasi", ly: 50.9, warna: '#ffe4a8', radius: 4.8,
+              planet: [{ nama: "51 Pegasi b", ukuran: 1.6, warna: 0xd9a35c, orbit: 8, kec: 0.006 }] },
+            { nama: "HD 209458", ly: 159, warna: '#fff3d6', radius: 5.0,
+              planet: [{ nama: "HD 209458 b", ukuran: 1.7, warna: 0xcc8844, orbit: 8.5, kec: 0.004 }] },
+            { nama: "TOI-700", ly: 101.4, warna: '#ff9a6e', radius: 2.2,
+              planet: [
+                  { nama: "TOI-700 d", ukuran: 0.9, warna: 0x5599cc, orbit: 6, kec: 0.0032 },
+                  { nama: "TOI-700 e", ukuran: 0.8, warna: 0x66aadd, orbit: 8.4, kec: 0.0022 }
+              ] },
+            { nama: "Kepler-186", ly: 582, warna: '#ff7d5c', radius: 2.8,
+              planet: [{ nama: "Kepler-186 f", ukuran: 1.05, warna: 0x8899aa, orbit: 7, kec: 0.0025 }] },
+            { nama: "Kepler-452", ly: 1400, warna: '#fff0c8', radius: 5.4,
+              planet: [{ nama: "Kepler-452 b", ukuran: 1.6, warna: 0x77aa88, orbit: 9.2, kec: 0.0015 }] },
+            { nama: "Tau Ceti", ly: 11.9, warna: '#fff2c0', radius: 4.4,
+              planet: [{ nama: "Tau Ceti e", ukuran: 1.3, warna: 0xd9a86a, orbit: 7.4, kec: 0.0028 }] },
+            { nama: "Gliese 581", ly: 20.4, warna: '#ff8855', radius: 2.4,
+              planet: [{ nama: "Gliese 581 g", ukuran: 1.1, warna: 0x8899bb, orbit: 5.6, kec: 0.0038 }] },
+            { nama: "Upsilon Andromedae", ly: 44, warna: '#fff6da', radius: 5.2,
+              planet: [{ nama: "Upsilon Andromedae b", ukuran: 1.9, warna: 0xcc9955, orbit: 6.6, kec: 0.005 }] }
+        ];
+
+        daftarSistemAsing.forEach((sis, i) => {
+            const pos = posisiOrbitLuar(i, daftarSistemAsing.length + 1, sis.ly);
+            const bintangMesh = buatBintangAsing(sis.nama, pos, sis.radius, sis.warna);
+            if (sis.planet) sis.planet.forEach(p => buatEksoplanetAsing(p.nama, bintangMesh, p.orbit, p.ukuran, p.warna, p.kec));
+            if (sis.pendamping) {
+                const pend = sis.pendamping;
+                const pivotPend = new THREE.Group(); pivotPend.position.copy(pos); scene.add(pivotPend);
+                const meshPend = new THREE.Mesh(new THREE.SphereGeometry(pend.radius, 14, 14), new THREE.MeshBasicMaterial({ color: pend.warna }));
+                meshPend.position.x = pend.orbit;
+                const infoPend = dbSemesta[pend.nama];
+                if (infoPend) {
+                    meshPend.userData = { nama: pend.nama, tipe: infoPend.tipe, desc: infoPend.desc, fakta: infoPend.fakta, data: infoPend.data || null, sumber: infoPend.sumber || "NASA / SIMBAD" };
+                    objekInteraktif.push(meshPend);
+                }
+                pivotPend.add(meshPend);
+                kelompokEko.push({ pivot: pivotPend, mesh: meshPend, kec: pend.kec });
+            }
+        });
+
+        // ==========================================
+        // TRAPPIST-1
+        // ==========================================
+        const posisiTrappist = posisiOrbitLuar(daftarSistemAsing.length, daftarSistemAsing.length + 1, 40);
+        const trappistMesh = buatBintangAsing("TRAPPIST-1", posisiTrappist, 1.3, '#ff5533');
+        const planetTrappist = [
+            { nama: "TRAPPIST-1 b", ukuran: 0.35, warna: 0xaa6644, orbit: 2.4, kec: 0.02 },
+            { nama: "TRAPPIST-1 c", ukuran: 0.37, warna: 0xcc8855, orbit: 3.0, kec: 0.016 },
+            { nama: "TRAPPIST-1 d", ukuran: 0.28, warna: 0x88aacc, orbit: 3.6, kec: 0.012 },
+            { nama: "TRAPPIST-1 e", ukuran: 0.33, warna: 0x4488cc, orbit: 4.2, kec: 0.009 },
+            { nama: "TRAPPIST-1 f", ukuran: 0.36, warna: 0x66aa77, orbit: 4.9, kec: 0.007 },
+            { nama: "TRAPPIST-1 g", ukuran: 0.40, warna: 0x99bb88, orbit: 5.6, kec: 0.0055 },
+            { nama: "TRAPPIST-1 h", ukuran: 0.27, warna: 0xccddee, orbit: 6.3, kec: 0.004 }
+        ];
+        planetTrappist.forEach(p => buatEksoplanetAsing(p.nama, trappistMesh, p.orbit, p.ukuran, p.warna, p.kec));
+
+        // ==========================================
+        // KOMET, ASTEROID DEKAT BUMI & OBJEK ANTARBINTANG DI TATA SURYA KITA
+        // ==========================================
+        buatObjekKecilKosmik("Komet Halley (1P/Halley)", new THREE.Vector3(-70, 18, 95), 1.1, 0xaee0ff, 'komet');
+        buatObjekKecilKosmik("'Oumuamua", new THREE.Vector3(38, 6, 42), 0.6, 0xbfa898, 'lonjong');
+        buatObjekKecilKosmik("101955 Bennu", new THREE.Vector3(25, -2, -10), 0.4, 0x554433, 'asteroid');
+        buatObjekKecilKosmik("162173 Ryugu", new THREE.Vector3(21, 3, 13), 0.42, 0x3a3a3a, 'asteroid');
+        buatObjekKecilKosmik("99942 Apophis", new THREE.Vector3(27, -1, 6), 0.32, 0x8a7a6a, 'asteroid');
+
+        // ==========================================
+        // GUGUS BINTANG & NEBULA (lama + tambahan)
+        // ==========================================
+        buatGugusBintang("Gugus Pleiades (M45)", posisiOrbitLuar(2, 6, 444, 1.7), 220, 55, 0xbcd8ff);
+        buatGugusBintang("Nebula Orion (M42)", posisiOrbitLuar(4, 6, 1344, 2.6), 320, 75, 0xd88fd8);
+        buatGugusBintang("Gugus Hyades", posisiOrbitLuar(1, 6, 153, 4.1), 160, 42, 0xfff0c8);
+        buatGugusBintang("Gugus Beehive (M44)", posisiOrbitLuar(3, 6, 577, 5.0), 200, 48, 0xffe6b0);
+        buatGugusBintang("Gugus Omega Centauri", posisiOrbitLuar(0, 6, 17000, 0.9), 380, 62, 0xf5f0d0);
+        buatGugusBintang("Gugus 47 Tucanae", posisiOrbitLuar(5, 6, 13000, 5.9), 340, 58, 0xf0e8d0);
+
+        buatNebula("Nebula Elang (Eagle Nebula / Pillars of Creation)", posisiOrbitLuar(1.4, 7, 6500, 2.0), 400, 60, [0x66cc99, 0xffb388, 0xaadd88]);
+        buatNebula("Nebula Cincin (Ring Nebula / M57)", posisiOrbitLuar(3.6, 7, 2283, 1.3), 260, 38, [0x88ddcc, 0xcc88ee]);
+        buatNebula("Nebula Kepiting (Crab Nebula / M1)", posisiOrbitLuar(5.2, 7, 6500, 4.4), 340, 50, [0xffaa88, 0x88ccee, 0xffee99]);
+        buatNebula("Nebula Helix", posisiOrbitLuar(0.6, 7, 650, 3.3), 300, 46, [0x66bbdd, 0x3399cc, 0x99ddee]);
+        buatNebula("Nebula Carina", posisiOrbitLuar(2.2, 7, 7500, 5.5), 420, 65, [0xff9977, 0xffcc99, 0x77aadd]);
+        buatNebula("Nebula Gelap Coalsack", posisiOrbitLuar(4.8, 7, 600, 0.3), 260, 44, [0x2a2632, 0x35303e], true);
+
+        buatBintangNeutron("Pulsar Kepiting (PSR B0531+21)", posisiOrbitLuar(5.2, 7, 6500, 4.4).clone().add(new THREE.Vector3(0, 6, 0)), '#cfe0ff');
+        buatBintangNeutron("Pulsar Vela", posisiOrbitLuar(3.0, 8, 960, 6.0), '#bcd8ff');
+        buatBintangNeutron("PSR B1919+21 (Pulsar Pertama)", posisiOrbitLuar(6.0, 8, 2283, 2.7), '#d8e8ff');
+
+        buatLubangHitam("Sagittarius A*", pusatGalaksi, 2.2);
+        buatLubangHitam("Cygnus X-1", posisiOrbitLuar(6.6, 8, 7200, 1.1), 1.3);
+
+        buatDebuKosmik("Awan Molekul Antarbintang", new THREE.Vector3(150, -30, -180), 900, 220, 0x8899bb);
+        buatDebuKosmik("Awan Molekul Antarbintang", new THREE.Vector3(-220, 40, 160), 900, 240, 0x99aacc);
+        buatDebuKosmik(null, new THREE.Vector3(300, 60, 300), 700, 200, 0x776688);
+        buatDebuKosmik(null, new THREE.Vector3(-300, -60, -260), 700, 200, 0x667799);
+
+        const daftarBintangLatar = [
+            { nama: "Betelgeuse", ly: 548, warna: '#ff6a3c', ukuran: 4.2 },
+            { nama: "Rigel", ly: 860, warna: '#bcdcff', ukuran: 4.0 },
+            { nama: "Vega", ly: 25, warna: '#eaf2ff', ukuran: 2.0 },
+            { nama: "Polaris", ly: 433, warna: '#fff6d8', ukuran: 3.2 },
+            { nama: "Arcturus", ly: 37, warna: '#ffcf8a', ukuran: 2.4 },
+            { nama: "Antares", ly: 550, warna: '#ff5a3c', ukuran: 4.0 },
+            { nama: "Procyon", ly: 11.46, warna: '#fff4e0', ukuran: 1.9 },
+            { nama: "Altair", ly: 16.73, warna: '#eef3ff', ukuran: 1.9 },
+            { nama: "Aldebaran", ly: 65, warna: '#ffb27a', ukuran: 3.0 },
+            { nama: "Spica", ly: 250, warna: '#bcd4ff', ukuran: 3.0 },
+            { nama: "Pollux", ly: 34, warna: '#ffdca0', ukuran: 2.3 },
+            { nama: "Capella", ly: 43, warna: '#fff2c8', ukuran: 2.6 },
+            { nama: "Fomalhaut", ly: 25, warna: '#eaf2ff', ukuran: 2.1 },
+            { nama: "Deneb", ly: 2600, warna: '#dce8ff', ukuran: 4.6 },
+            { nama: "Canopus", ly: 310, warna: '#fdf7f0', ukuran: 3.8 },
+            { nama: "Achernar", ly: 139, warna: '#bcd4ff', ukuran: 2.8 }
+        ];
+        // Total dihitung dinamis dari panjang daftar agar sudut sebaran setiap bintang tetap merata
+        // walau jumlah bintang latar bertambah.
+        daftarBintangLatar.forEach((b, i) => buatBintangLatar(b.nama, posisiOrbitLuar(i, daftarBintangLatar.length, b.ly, 3.4), b.warna, b.ukuran));
+
+        // Interaksi Klik Panel
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const sidePanel = document.getElementById('side-panel');
+        
+        document.getElementById('close-btn').addEventListener('click', () => sidePanel.classList.remove('active'));
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.07;
+        controls.minDistance = 3; controls.maxDistance = 40000;
+        // Kontrol kamera dibuat BEBAS dimiringkan ke segala arah (atas/bawah/muka/belakang tanpa
+        // batas kutub) seperti pada animasi Gaia — bukan hanya berputar mendatar mengelilingi objek.
+        controls.minPolarAngle = 0;            // boleh menunduk lurus dari atas galaksi
+        controls.maxPolarAngle = Math.PI;      // boleh mendongak lurus dari bawah galaksi
+        controls.enableRotate = true;
+        controls.rotateSpeed = 0.7;
+        controls.zoomSpeed = 1.0;
+        controls.panSpeed = 0.7;
+        controls.enablePan = true;
+        controls.screenSpacePanning = true;
+
+        // ==========================================
+        // KAMERA BEBAS JELAJAH: terbang & zoom halus ke objek apa pun yang diklik, TIDAK terpaku
+        // hanya pada Matahari — target OrbitControls berpindah mengikuti objek terakhir yang dipilih
+        // sehingga pengguna bisa memutar/menjelajah bebas di sekitar objek tersebut setelahnya.
+        // ==========================================
+        let animasiKameraId = null;
+        function terbangKeObjek(objek) {
+            const posisiTarget = new THREE.Vector3();
+            objek.getWorldPosition(posisiTarget);
+
+            let ukuran = 6;
+            if (objek.geometry) {
+                if (!objek.geometry.boundingSphere) objek.geometry.computeBoundingSphere();
+                const skalaMaks = Math.max(objek.scale.x, objek.scale.y, objek.scale.z, 0.001);
+                ukuran = (objek.geometry.boundingSphere ? objek.geometry.boundingSphere.radius : 6) * skalaMaks;
+            }
+            const jarakPandang = THREE.MathUtils.clamp(ukuran * 7, 12, 2200);
+
+            const arahDariTarget = camera.position.clone().sub(controls.target);
+            if (arahDariTarget.lengthSq() < 0.0001) arahDariTarget.set(0, 0.3, 1);
+            arahDariTarget.normalize();
+            const posisiKameraBaru = posisiTarget.clone().addScaledVector(arahDariTarget, jarakPandang);
+
+            const posisiAwal = camera.position.clone();
+            const targetAwal = controls.target.clone();
+            const waktuMulai = performance.now();
+            const durasi = 1100;
+
+            if (animasiKameraId) cancelAnimationFrame(animasiKameraId);
+            function langkahAnimasi(sekarang) {
+                const t = Math.min((sekarang - waktuMulai) / durasi, 1);
+                const e = 1 - Math.pow(1 - t, 3); // ease-out cubic
+                camera.position.lerpVectors(posisiAwal, posisiKameraBaru, e);
+                controls.target.lerpVectors(targetAwal, posisiTarget, e);
+                if (t < 1) animasiKameraId = requestAnimationFrame(langkahAnimasi);
+            }
+            animasiKameraId = requestAnimationFrame(langkahAnimasi);
+        }
+
+        function resetTampilanKamera() {
+            const posisiAwal = camera.position.clone();
+            const targetAwal = controls.target.clone();
+            const waktuMulai = performance.now();
+            const durasi = 1100;
+            if (animasiKameraId) cancelAnimationFrame(animasiKameraId);
+            function langkahAnimasi(sekarang) {
+                const t = Math.min((sekarang - waktuMulai) / durasi, 1);
+                const e = 1 - Math.pow(1 - t, 3);
+                camera.position.lerpVectors(posisiAwal, POSISI_KAMERA_AWAL, e);
+                controls.target.lerpVectors(targetAwal, TARGET_KAMERA_AWAL, e);
+                if (t < 1) animasiKameraId = requestAnimationFrame(langkahAnimasi);
+            }
+            animasiKameraId = requestAnimationFrame(langkahAnimasi);
+        }
+        document.getElementById('reset-view-btn').addEventListener('click', resetTampilanKamera);
+
+        // ==========================================
+        // TOGGLE DASBOR KIRI: penuh -> ringkas -> sembunyi -> penuh
+        // Memberi pandangan 3D yang lebih terbuka saat panel info/legenda tidak dibutuhkan.
+        // ==========================================
+        (function() {
+            const dasbor = document.getElementById('dasbor-kiri');
+            const tombol = document.getElementById('dasbor-toggle');
+            const urutanMode = ['penuh', 'ringkas', 'sembunyi'];
+            const labelMode = { penuh: 'Dasbor', ringkas: 'Ringkas', sembunyi: 'Tampilkan' };
+            const ikonMode = { penuh: '☰', ringkas: '▤', sembunyi: '☰' };
+            let modeSaatIni = 'penuh';
+
+            function terapkanMode(mode) {
+                modeSaatIni = mode;
+                dasbor.classList.remove('penuh', 'ringkas', 'sembunyi');
+                dasbor.classList.add(mode);
+                tombol.querySelector('.label').textContent = labelMode[mode];
+                tombol.firstChild.textContent = ikonMode[mode] + ' ';
+                tombol.title = mode === 'sembunyi' ? 'Tampilkan dasbor informasi' : 'Lipat / sederhanakan dasbor';
+            }
+
+            tombol.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = urutanMode.indexOf(modeSaatIni);
+                terapkanMode(urutanMode[(idx + 1) % urutanMode.length]);
+            });
+
+            terapkanMode('penuh');
+        })();
+
+        window.addEventListener('click', (event) => {
+            if (event.clientX > window.innerWidth - 380 && sidePanel.classList.contains('active')) return;
+            if (event.target.closest && event.target.closest('#reset-view-btn')) return;
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objekInteraktif);
+
+            if (intersects.length > 0) {
+                const objekTerpilih = intersects[0].object;
+                const data = objekTerpilih.userData;
+                document.getElementById('sp-title').innerText = data.nama;
+                document.getElementById('sp-subtitle').innerText = data.tipe;
+                document.getElementById('sp-desc').innerText = data.desc;
+                document.getElementById('sp-fact').innerText = data.fakta;
+                document.getElementById('sp-sumber').innerText = data.sumber ? `Sumber: ${data.sumber}` : '';
+                isiPanelData(data.data);
+                sidePanel.classList.add('active');
+                terbangKeObjek(objekTerpilih);
+            } else {
+                sidePanel.classList.remove('active');
+            }
+        });
+
+        const semuaObjekTataSurya = [merkurius, venus, bumi, mars, jupiter, saturnus, uranus, neptunus, pluto];
+
+        // Kecepatan rotasi kubah langit (rasi bintang) mengikuti waktu NYATA perangkat pengguna:
+        // satu putaran penuh disimulasikan berlangsung selama ≈6 menit nyata agar pergerakannya terlihat jelas
+        // (rotasi harian sesungguhnya di Bumi adalah 24 jam, dipercepat di sini agar dapat diamati langsung).
+        const DURASI_PUTARAN_LANGIT_DETIK = 360;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const waktuDetik = Date.now() / 1000;
+
+            matahari.mesh.rotation.y += 0.001;
+            alphaACenter.rotation.y += 0.001;
+            alphaBCenter.rotation.y += 0.001;
+            centauriBPivot.rotation.y += 0.005;
+            
+            semuaObjekTataSurya.forEach(p => {
+                p.pivot.rotation.y += p.kecOrbit;
+                p.mesh.rotation.y += 0.005; 
+            });
+
+            semuaBulanAlami.forEach(b => {
+                b.pivot.rotation.y += b.kecOrbit;
+                b.mesh.rotation.y += 0.01;
+            });
+
+            semuaSatelitBuatan.forEach(s => {
+                s.pivot.rotation.y += s.kecOrbit;
+                s.mesh.rotation.y += 0.02;
+            });
+
+            grupVisualBimaSakti.rotation.y += 0.00006;
+            grupVisualAndromeda.rotation.y += 0.00004;
+
+            asteroidBeltGroup.rotation.y += 0.0004;
+            trojanBeltGroup.rotation.y += 0.0004;
+            neaGroup.rotation.y += 0.0009;
+            milkyWayGroup.rotation.y += 0.00005;
+            starfieldGalaksi.rotation.y += 0.00002;
+
+            kelompokEko.forEach(k => {
+                k.pivot.rotation.y += k.kec;
+                k.mesh.rotation.y += 0.008;
+            });
+            trappistMesh.rotation.y += 0.004;
+            proximaMesh.rotation.y += 0.002;
+
+            // Rotasi kubah langit rasi bintang berdasarkan waktu nyata perangkat (real-time)
+            kubahLangit.rotation.y = (waktuDetik % DURASI_PUTARAN_LANGIT_DETIK) / DURASI_PUTARAN_LANGIT_DETIK * Math.PI * 2;
+
+            // Berkas pulsar & cakram akresi lubang hitam berputar terus-menerus
+            semuaPulsar.forEach(p => {
+                if (p.__isCakram) {
+                    p.cakram.rotation.z += 0.01;
+                    p.cakram2.rotation.z -= 0.007;
+                } else {
+                    p.rotation.y += 0.03;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
