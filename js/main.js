@@ -54,7 +54,7 @@ const interactiveObjects = [];
 // Instantiate factories & managers
 const celestialFactory = createCelestialFactory(scene, interactiveObjects);
 const galaxyFactory = createGalaxyFactory(scene, interactiveObjects);
-const stageManager = createStageManager(camera, controls);
+const stageManager = createStageManager(camera, controls, scene);
 
 const uiManager = createUIManager(stageManager, interactiveObjects, cosmicLibrary, (selectedMesh) => {
     // Callback when an object is selected
@@ -62,7 +62,7 @@ const uiManager = createUIManager(stageManager, interactiveObjects, cosmicLibrar
 
 // Initialize Scene Elements
 celestialFactory.initSolarSystem();
-galaxyFactory.initGalaxies();
+galaxyFactory.initGalaxies(cosmicLibrary);
 
 // Raycaster for clicks
 const raycaster = new THREE.Raycaster();
@@ -70,7 +70,7 @@ const mouse = new THREE.Vector2();
 
 window.addEventListener('click', (event) => {
     if (event.clientX > window.innerWidth - 420 && document.getElementById('side-panel').classList.contains('active')) return;
-    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#top-right-actions') || event.target.closest('#tour-hud')) return;
+    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#top-right-actions') || event.target.closest('#tour-hud') || event.target.closest('#library-modal')) return;
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -92,6 +92,7 @@ function animate() {
 
     celestialFactory.update(delta);
     galaxyFactory.update(delta);
+    stageManager.update(delta);
 
     controls.update();
     renderer.render(scene, camera);

@@ -1,11 +1,47 @@
 import * as THREE from 'three';
 
-export function createStageManager(camera, controls) {
+export function createStageManager(camera, controls, scene = null) {
     let currentStage = 1;
     let isTourRunning = false;
     let tourStep = 0;
     let tourTimer = null;
     let animationId = null;
+
+    // Holographic Target Focus Beacon / Indicator Ring
+    let focusBeacon = null;
+    if (scene) {
+        const beaconGroup = new THREE.Group();
+        
+        // Outer glowing cyan ring
+        const outerGeo = new THREE.RingGeometry(0.88, 1.0, 32);
+        const outerMat = new THREE.MeshBasicMaterial({
+            color: 0x00f5d4,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const outerRing = new THREE.Mesh(outerGeo, outerMat);
+        beaconGroup.add(outerRing);
+
+        // Inner glowing amber reticle
+        const innerGeo = new THREE.RingGeometry(0.48, 0.58, 24);
+        const innerMat = new THREE.MeshBasicMaterial({
+            color: 0xffbe0b,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.75,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const innerRing = new THREE.Mesh(innerGeo, innerMat);
+        beaconGroup.add(innerRing);
+
+        beaconGroup.visible = false;
+        scene.add(beaconGroup);
+        focusBeacon = beaconGroup;
+    }
 
     const stagesConfig = {
         1: {
@@ -85,30 +121,67 @@ export function createStageManager(camera, controls) {
     function flyToObject(target, customDistance = null) {
         if (!target) return;
         const targetPos = new THREE.Vector3();
-        let size = 10;
+        let targetRadius = 10;
+        let category = '';
 
         if (target.isVector3) {
             targetPos.copy(target);
         } else if (target.isObject3D || typeof target.getWorldPosition === 'function') {
             target.getWorldPosition(targetPos);
+            if (target.userData) {
+                category = target.userData.kategori || target.userData.tipe || '';
+            }
             if (target.geometry) {
                 if (!target.geometry.boundingSphere) target.geometry.computeBoundingSphere();
                 const maxScale = Math.max(target.scale.x, target.scale.y, target.scale.z, 0.001);
-                size = (target.geometry.boundingSphere ? target.geometry.boundingSphere.radius : 8) * maxScale;
+                targetRadius = (target.geometry.boundingSphere ? target.geometry.boundingSphere.radius : 8) * maxScale;
             }
         } else if (target.posisi3D) {
             targetPos.set(target.posisi3D.x, target.posisi3D.y, target.posisi3D.z);
-            size = target.radiusVisual || 16;
+            category = target.kategori || target.tipe || '';
+            targetRadius = target.radiusVisual || 12;
         } else if (target.position) {
             targetPos.set(target.position.x, target.position.y, target.position.z);
+            category = target.kategori || '';
         }
 
-        const distance = customDistance || THREE.MathUtils.clamp(size * 5.5, 14, 4200);
+        // Calibrate precise zoom distance so the object is clearly visible right in front of the camera!
+        let zoomDistance = customDistance;
+        if (!zoomDistance) {
+            if (category.includes('Galaksi')) {
+                zoomDistance = Math.max(2200, targetRadius * 1.8);
+            } else if (category.includes('Nebula') || category.includes('H II')) {
+                zoomDistance = 65;
+            } else if (category.includes('Gugus Bola')) {
+                zoomDistance = 50;
+            } else if (category.includes('Gugus Terbuka')) {
+                zoomDistance = 40;
+            } else if (category.includes('Planetary') || category.includes('Supernova')) {
+                zoomDistance = 30;
+            } else if (category.includes('Lubang Hitam') || category.includes('Pulsar')) {
+                zoomDistance = 24;
+            } else if (category.includes('Bintang')) {
+                zoomDistance = 20;
+            } else if (category.includes('Tata Surya') || category.includes('Planet') || category.includes('Wahana')) {
+                zoomDistance = 16;
+            } else {
+                zoomDistance = THREE.MathUtils.clamp(targetRadius * 4.5, 18, 2500);
+            }
+        }
+
+        // Activate & place holographic focus reticle around the target object
+        if (focusBeacon) {
+            focusBeacon.position.copy(targetPos);
+            const beaconScale = Math.max(1.8, zoomDistance * 0.12);
+            focusBeacon.scale.set(beaconScale, beaconScale, beaconScale);
+            focusBeacon.visible = true;
+        }
+
         const dir = camera.position.clone().sub(controls.target);
         if (dir.lengthSq() < 0.0001) dir.set(0, 0.35, 1);
         dir.normalize();
 
-        const newCamPos = targetPos.clone().addScaledVector(dir, distance);
+        const newCamPos = targetPos.clone().addScaledVector(dir, zoomDistance);
         flyCamera(newCamPos, targetPos, 1100);
     }
 
@@ -166,6 +239,13 @@ export function createStageManager(camera, controls) {
         if (tourTimer) clearTimeout(tourTimer);
     }
 
+    function update(delta) {
+        if (focusBeacon && focusBeacon.visible) {
+            focusBeacon.lookAt(camera.position);
+            focusBeacon.rotation.z += 0.015;
+        }
+    }
+
     return {
         stagesConfig,
         getCurrentStage: () => currentStage,
@@ -174,6 +254,7 @@ export function createStageManager(camera, controls) {
         flyCamera,
         startCinematicTour,
         stopCinematicTour,
-        isTourPlaying: () => isTourRunning
+        isTourPlaying: () => isTourRunning,
+        update
     };
 }

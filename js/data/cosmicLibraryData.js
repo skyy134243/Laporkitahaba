@@ -145,28 +145,81 @@ for (let i = famousGlobulars.length + 1; i <= 158; i++) {
 }
 
 // ----------------------------------------------------------------------------
-// 5. GUGUS BOLA ANDROMEDA & SATELIT LAINNYA (40 objek)
+// 5. GUGUS BOLA ANDROMEDA (100 OBJEK) (REVISED BOLOGNA CATALOG)
 // ----------------------------------------------------------------------------
-for (let k = 1; k <= 35; k++) {
-    const x = -18000 + Math.round(Math.sin(k * 1.7) * 1400);
-    const y = 7500 + Math.round(Math.cos(k * 2.3) * 700);
-    const z = 22000 + Math.round(Math.sin(k * 3.1) * 1400);
+for (let k = 1; k <= 100; k++) {
+    const rLokal = 400 + Math.pow(k / 100, 0.7) * 2800;
+    const th = k * 0.58;
+    const phi = Math.sin(k * 1.4) * 0.6;
+    const x = -18000 + Math.round(Math.cos(th) * Math.cos(phi) * rLokal);
+    const y = 7500 + Math.round(Math.sin(phi) * rLokal * 0.8);
+    const z = 22000 + Math.round(Math.sin(th) * Math.cos(phi) * rLokal);
 
     cosmicLibrary.push({
         id: `lib-m31-gc-${k}`,
-        nama: `Gugus Bola Andromeda G${k * 7 + 12}`,
+        nama: k === 1 ? "Mayall II (G1 / NGC-224-G1)" : `Gugus Bola Andromeda RBC B${k < 10 ? '00' + k : (k < 100 ? '0' + k : k)}`,
         galaksi: 'Galaksi Andromeda (M31)',
         kategori: 'Gugus Bola',
         tipe: 'Gugus Bola Ekstragalaksi M31',
         jarakLy: '≈2,5 Juta ly',
-        desc: `Gugus bintang bola purba yang mengorbit di dalam halo raksasa Galaksi Andromeda.`,
-        fakta: `Galaksi Andromeda memiliki populasi gugus bola sekitar 450 gugus — tiga kali lebih banyak dibanding Bima Sakti kita.`,
+        radiusVisual: 24,
+        desc: k === 1 ? "Gugus bola paling masif di seluruh Grup Lokal galaksi." : `Gugus bintang bola purba yang mengorbit di halo luas Galaksi Andromeda.`,
+        fakta: `Katalog Revised Bologna (RBC) mencatat Andromeda memiliki lebih dari 450 gugus bola purba.`,
         posisi3D: { x, y, z },
         warna: '#faeed5',
         icon: '⚪',
         data: { "Galaksi Induk": "Galaksi Andromeda (M31)", "Katalog": "Revised Bologna Catalogue (RBC)" }
     });
 }
+
+// ----------------------------------------------------------------------------
+// 6. GUGUS BOLA GALAKSI SATELIT LAINNYA (25 OBJEK)
+// ----------------------------------------------------------------------------
+const satGCNames = [
+    { name: "Messier 54 (Inti Sgr dSph)", gal: "Sagittarius dSph", x: -200, y: -900, z: -1800 },
+    { name: "Terzan 7 (Sgr dSph)", gal: "Sagittarius dSph", x: -220, y: -920, z: -1780 },
+    { name: "Terzan 8 (Sgr dSph)", gal: "Sagittarius dSph", x: -180, y: -880, z: -1820 },
+    { name: "Arp 2 (Sgr dSph)", gal: "Sagittarius dSph", x: -210, y: -910, z: -1810 },
+    { name: "Fornax 1", gal: "Fornax dSph", x: -9000, y: -12000, z: -4000 },
+    { name: "Fornax 2", gal: "Fornax dSph", x: -8900, y: -12050, z: -4020 },
+    { name: "Fornax 3 (NGC 1049)", gal: "Fornax dSph", x: -9020, y: -11980, z: -3990 },
+    { name: "Fornax 4", gal: "Fornax dSph", x: -9050, y: -12020, z: -4010 },
+    { name: "Fornax 5", gal: "Fornax dSph", x: -8950, y: -12000, z: -3980 },
+    { name: "Fornax 6", gal: "Fornax dSph", x: -9010, y: -12010, z: -4000 },
+    { name: "Hodge 11 (LMC)", gal: "Awan Magellan Besar (LMC)", x: -1200, y: -3800, z: 1200 },
+    { name: "NGC 1466 (LMC)", gal: "Awan Magellan Besar (LMC)", x: -1150, y: -3750, z: 1250 },
+    { name: "NGC 1841 (LMC)", gal: "Awan Magellan Besar (LMC)", x: -1250, y: -3850, z: 1180 },
+    { name: "NGC 2210 (LMC)", gal: "Awan Magellan Besar (LMC)", x: -1180, y: -3820, z: 1220 },
+    { name: "NGC 121 (SMC)", gal: "Awan Magellan Kecil (SMC)", x: 2800, y: -4500, z: 800 },
+    { name: "Lindsay 1 (SMC)", gal: "Awan Magellan Kecil (SMC)", x: 2850, y: -4480, z: 820 },
+    { name: "Kron 3 (SMC)", gal: "Awan Magellan Kecil (SMC)", x: 2780, y: -4520, z: 780 },
+    { name: "WLM-1 (Gugus Bola WLM)", gal: "WLM", x: -19000, y: -4500, z: 12000 },
+    { name: "Gugus Bola Sextans A-1", gal: "Sextans A", x: -18500, y: 15500, z: -25000 },
+    { name: "Gugus Bola Leo I-GC1", gal: "Leo I", x: -1800, y: 16000, z: -5500 },
+    { name: "Gugus Bola Sculptor 1", gal: "Sculptor dSph", x: 600, y: -7800, z: 1500 },
+    { name: "Gugus Bola Carina 1", gal: "Carina dSph", x: 1200, y: -8200, z: -2200 },
+    { name: "Gugus Bola Ursa Minor 1", gal: "Ursa Minor dSph", x: -1500, y: 5500, z: 3200 },
+    { name: "Gugus Bola Draco 1", gal: "Draco dSph", x: -1800, y: 6200, z: 3800 },
+    { name: "Gugus Bola Pegasus dIrr-1", gal: "Pegasus dIrr", x: -14500, y: -3800, z: 18000 }
+];
+
+satGCNames.forEach((sg, idx) => {
+    cosmicLibrary.push({
+        id: `lib-sat-gc-${idx + 1}`,
+        nama: sg.name,
+        galaksi: sg.gal,
+        kategori: 'Gugus Bola',
+        tipe: `Gugus Bola Galaksi Satelit (${sg.gal})`,
+        jarakLy: 'Bervariasi',
+        radiusVisual: 20,
+        desc: `Gugus bola purba yang terikat pada galaksi satelit di lingkungan kosmik Grup Lokal.`,
+        fakta: `Menjadi bukti evolusi penggabungan galaksi dan interaksi pasang surut gravitasi.`,
+        posisi3D: { x: sg.x, y: sg.y, z: sg.z },
+        warna: '#faebd7',
+        icon: '⚪',
+        data: { "Galaksi Induk": sg.gal, "Tipe": "Satellite Globular Cluster" }
+    });
+});
 
 // ----------------------------------------------------------------------------
 // 6. GUGUS BINTANG TERBUKA (OPEN CLUSTERS & ASOSIASI OB) (65 objek)
@@ -198,40 +251,41 @@ famousOpenClusters.forEach((oc, idx) => {
     });
 });
 
-for (let m = famousOpenClusters.length + 1; m <= 65; m++) {
-    const r = 900 + (m * 90);
-    const th = m * 0.45;
-    const x = Math.round(Math.cos(th) * (r * 0.25));
-    const y = Math.round(Math.sin(m * 1.3) * 35);
-    const z = Math.round(-2600 + Math.sin(th) * (r * 0.25));
-    const dist = `${Math.round(r * 1.8)} ly`;
+for (let m = famousOpenClusters.length + 1; m <= 150; m++) {
+    const r = 800 + (m * 45);
+    const th = m * 0.42;
+    const x = Math.round(Math.cos(th) * (r * 0.28));
+    const y = Math.round(Math.sin(m * 1.5) * 32);
+    const z = Math.round(-2600 + Math.sin(th) * (r * 0.28));
+    const dist = `${Math.round(r * 1.6)} ly`;
 
     cosmicLibrary.push({
         id: `lib-oc-${m}`,
-        nama: `Gugus Bintang Terbuka NGC ${2100 + m * 24}`,
+        nama: `Gugus Bintang Terbuka NGC ${2000 + m * 18}`,
         galaksi: 'Bima Sakti',
         kategori: 'Gugus Terbuka',
-        tipe: 'Gugus Terbuka Lengan Spiral',
+        tipe: 'Gugus Bintang Terbuka Lengan Spiral',
         jarakLy: dist,
+        radiusVisual: 16,
         desc: `Gugus bintang muda yang terbentuk bersama dari awan gas molekul di piringan galaksi.`,
         fakta: `Bintang-bintangnya terikat gravitasi secara longgar dan perlahan akan menyebar ke piringan galaksi.`,
         posisi3D: { x, y, z },
-        warna: '#c2dcff',
-        icon: '🔷',
+        warna: '#b8d8ff',
+        icon: '✨',
         data: { "Katalog": "WEBDA Open Cluster Database", "Jarak": dist }
     });
 }
 
 // ----------------------------------------------------------------------------
-// 7. NEBULA EMISI, DAERAH H II, DAN PEMBIBITAN BINTANG (75 objek)
+// 8. NEBULA EMISI, DAERAH H II, DAN PEMBIBITAN BINTANG (160 objek)
 // ----------------------------------------------------------------------------
 const famousNebulae = [
-    { name: "Nebula Orion (M42)", gal: "Bima Sakti", dist: "1.344 ly", desc: "Pabrik bintang paling terkenal dan terdekat di Lengan Orion.", fakta: "Dapat dilihat dengan mata telanjang di pedang Orion, melahirkan ribuan bintang baru.", x: 85, y: -25, z: 120, c: "#e880d8" },
-    { name: "Nebula Carina (NGC 3372)", gal: "Bima Sakti", dist: "7.500 ly", desc: "Nebula emisi raksasa rumah bintang monster Eta Carinae.", fakta: "Citra Cosmic Cliffs JWST menampilkan tebing-tebing debu pembibitan bintang secara dramatis.", x: 320, y: -40, z: -1100, c: "#ff8866" },
-    { name: "Nebula Elang (Pillars of Creation / M16)", gal: "Bima Sakti", dist: "6.500 ly", desc: "Rumah bagi struktur pilar gas ikonik Pilar-Pilar Penciptaan.", fakta: "Pilar gas hidrogen dingin dan debu tempat bayi-bayi bintang terbentuk oleh keruntuhan gravitasi.", x: -120, y: 20, z: -1450, c: "#77ddaa" },
-    { name: "Nebula Lagoon (M8)", gal: "Bima Sakti", dist: "4.100 ly", desc: "Daerah H II raksasa di rasi Sagittarius yang dibelah jalur debu hitam.", fakta: "Terionisasi kuat oleh radiasi ultraviolet bintang maharaksasa Herschel 36.", x: 50, y: -30, z: -1700, c: "#ff99aa" },
-    { name: "Nebula Trifid (M20)", gal: "Bima Sakti", dist: "5.200 ly", desc: "Kombinasi unik nebula emisi merah, refleksi biru, dan debu gelap.", fakta: "Tiga jalur debu membagi nebula ini menjadi tiga lobus menyerupai daun semanggi.", x: 40, y: -25, z: -1650, c: "#ff77bb" },
-    { name: "Nebula Rosette (NGC 2237)", gal: "Bima Sakti", dist: "5.000 ly", desc: "Awan gas emisi berbentuk bunga mawar raksasa yang mengelilingi gugus NGC 2244.", fakta: "Angin bintang dari gugus tengah telah membersihkan rongga tengah selebar 50 tahun cahaya.", x: 210, y: 15, z: 340, c: "#ff6677" },
+    { name: "Nebula Orion (M42)", gal: "Bima Sakti", dist: "1.344 ly", desc: "Pabrik bintang paling terkenal dan terdekat di Lengan Orion.", fakta: "Dapat dilihat dengan mata telanjang di pedang Orion, melahirkan ribuan bintang baru.", x: 85, y: -25, z: 120, c: "#ff6f8a" },
+    { name: "Nebula Carina (NGC 3372)", gal: "Bima Sakti", dist: "7.500 ly", desc: "Nebula emisi raksasa rumah bintang monster Eta Carinae.", fakta: "Citra Cosmic Cliffs JWST menampilkan tebing-tebing debu pembibitan bintang secara dramatis.", x: 320, y: -40, z: -1100, c: "#ff7766" },
+    { name: "Nebula Elang (Pillars of Creation / M16)", gal: "Bima Sakti", dist: "6.500 ly", desc: "Rumah bagi struktur pilar gas ikonik Pilar-Pilar Penciptaan.", fakta: "Pilar gas hidrogen dingin dan debu tempat bayi-bayi bintang terbentuk oleh keruntuhan gravitasi.", x: -120, y: 20, z: -1450, c: "#66ddaa" },
+    { name: "Nebula Lagoon (M8)", gal: "Bima Sakti", dist: "4.100 ly", desc: "Daerah H II raksasa di rasi Sagittarius yang dibelah jalur debu hitam.", fakta: "Terionisasi kuat oleh radiasi ultraviolet bintang maharaksasa Herschel 36.", x: 50, y: -30, z: -1700, c: "#ff8899" },
+    { name: "Nebula Trifid (M20)", gal: "Bima Sakti", dist: "5.200 ly", desc: "Kombinasi unik nebula emisi merah, refleksi biru, dan debu gelap.", fakta: "Tiga jalur debu membagi nebula ini menjadi tiga lobus menyerupai daun semanggi.", x: 40, y: -25, z: -1650, c: "#ff77aa" },
+    { name: "Nebula Rosette (NGC 2237)", gal: "Bima Sakti", dist: "5.000 ly", desc: "Awan gas emisi berbentuk bunga mawar raksasa yang mengelilingi gugus NGC 2244.", fakta: "Angin bintang dari gugus tengah telah membersihkan rongga tengah selebar 50 tahun cahaya.", x: 210, y: 15, z: 340, c: "#ff6075" },
     { name: "Nebula Amerika Utara (NGC 7000)", gal: "Bima Sakti", dist: "2.590 ly", desc: "Nebula emisi di rasi Cygnus yang bentuknya menyerupai benua Amerika Utara.", fakta: "Dipisahkan dari Nebula Pelikan oleh dinding debu gelap pekat yang menyerap cahaya.", x: -90, y: 40, z: -480, c: "#ff6688" },
     { name: "Nebula Hati & Jiwa (IC 1805 & IC 1848)", gal: "Bima Sakti", dist: "7.500 ly", desc: "Kompleks pembibitan bintang raksasa di Lengan Perseus yang bersinar merah terang.", fakta: "Menampung gugus bintang terbuka muda Melotte 15 yang aktif mengionisasi gas hidrogen.", x: -350, y: 35, z: -1550, c: "#ff5577" }
 ];
@@ -244,6 +298,7 @@ famousNebulae.forEach((neb, idx) => {
         kategori: 'Nebula & Daerah H II',
         tipe: 'Kawasan Pembentukan Bintang (H II Region)',
         jarakLy: neb.dist,
+        radiusVisual: 28,
         desc: neb.desc,
         fakta: neb.fakta,
         posisi3D: { x: neb.x, y: neb.y, z: neb.z },
@@ -253,32 +308,33 @@ famousNebulae.forEach((neb, idx) => {
     });
 });
 
-for (let p = famousNebulae.length + 1; p <= 75; p++) {
-    const r = 1200 + (p * 110);
-    const th = p * 0.52;
+for (let p = famousNebulae.length + 1; p <= 160; p++) {
+    const r = 1100 + (p * 55);
+    const th = p * 0.48;
     const x = Math.round(Math.cos(th) * (r * 0.28));
-    const y = Math.round(Math.sin(p * 1.8) * 30);
+    const y = Math.round(Math.sin(p * 1.6) * 28);
     const z = Math.round(-2600 + Math.sin(th) * (r * 0.28));
-    const dist = `${Math.round(r * 2)} ly`;
+    const dist = `${Math.round(r * 1.8)} ly`;
 
     cosmicLibrary.push({
         id: `lib-neb-${p}`,
-        nama: `Kawasan Emisi H II Sharpless Sh2-${p * 3}`,
+        nama: `Kawasan Emisi H II Sharpless Sh2-${p * 2 + 5}`,
         galaksi: 'Bima Sakti',
         kategori: 'Nebula & Daerah H II',
-        tipe: 'Awan Gas Pembentuk Bintang',
+        tipe: 'Awan Gas Pembentuk Bintang H II',
         jarakLy: dist,
-        desc: `Kompleks awan gas hidrogen antarbintang yang sedang melahirkan gugusan bintang baru.`,
-        fakta: `Gas hidrogen terionisasi bersinar terang akibat radiasi ultraviolet bintang masif di dalamnya.`,
+        radiusVisual: 24,
+        desc: `Awan gas hidrogen antarbintang yang sedang aktif melahirkan bintang baru di lengan spiral.`,
+        fakta: `Gas hidrogen memancarkan sinar merah H-alfa khas akibat eksitasi foton dari bintang kelas O dan B.`,
         posisi3D: { x, y, z },
-        warna: '#ff88aa',
+        warna: '#ff6f8a',
         icon: '🌸',
         data: { "Katalog": "Sharpless H II Catalog (Sh2)", "Jarak": dist }
     });
 }
 
 // ----------------------------------------------------------------------------
-// 8. SISA SUPERNOVA & NEBULA PLANETER (55 objek)
+// 9. SISA SUPERNOVA & NEBULA PLANETER (120 OBJEK)
 // ----------------------------------------------------------------------------
 const famousPlanetary = [
     { name: "Nebula Kepiting (M1 / Sisa Supernova 1054)", gal: "Bima Sakti", dist: "6.500 ly", desc: "Sisa ledakan supernova dahsyat yang tercatat oleh astronom Tiongkok pada 1054 M.", fakta: "Di pusatnya terdapat Pulsar Kepiting yang berputar 30 putaran per detik.", x: -220, y: 15, z: 380, c: "#ff8855" },
@@ -295,44 +351,46 @@ famousPlanetary.forEach((pn, idx) => {
         id: `lib-pn-${idx + 1}`,
         nama: pn.name,
         galaksi: pn.gal,
-        kategori: 'Nebula & Sisa Bintang',
+        kategori: 'Planetary & Sisa Supernova',
         tipe: 'Nebula Planeter / Sisa Supernova',
         jarakLy: pn.dist,
+        radiusVisual: 20,
         desc: pn.desc,
         fakta: pn.fakta,
         posisi3D: { x: pn.x, y: pn.y, z: pn.z },
         warna: pn.c,
-        icon: '💫',
+        icon: '💥',
         data: { "Galaksi": pn.gal, "Tipe": "Planetary Nebula / SNR", "Katalog": "Messier / NGC" }
     });
 });
 
-for (let s = famousPlanetary.length + 1; s <= 55; s++) {
-    const r = 1800 + (s * 120);
-    const th = s * 0.61;
-    const x = Math.round(Math.cos(th) * (r * 0.22));
-    const y = Math.round(Math.sin(s * 1.5) * 35);
-    const z = Math.round(-2600 + Math.sin(th) * (r * 0.22));
-    const dist = `${Math.round(r * 2)} ly`;
+for (let s = famousPlanetary.length + 1; s <= 120; s++) {
+    const r = 900 + (s * 65);
+    const th = s * 0.62;
+    const x = Math.round(Math.cos(th) * (r * 0.25));
+    const y = Math.round(Math.sin(s * 2.1) * 35);
+    const z = Math.round(-2600 + Math.sin(th) * (r * 0.25));
+    const dist = `${Math.round(r * 1.7)} ly`;
 
     cosmicLibrary.push({
         id: `lib-pn-${s}`,
-        nama: `Nebula Planeter Abell ${s}`,
+        nama: `Nebula Planeter NGC ${6500 + s * 14}`,
         galaksi: 'Bima Sakti',
-        kategori: 'Nebula & Sisa Bintang',
-        tipe: 'Nebula Planeter Gas',
+        kategori: 'Planetary & Sisa Supernova',
+        tipe: 'Nebula Planeter Katai Putih',
         jarakLy: dist,
-        desc: `Cangkang gas yang dihembuskan oleh bintang berukuran sedang di fase akhir kehidupannya.`,
-        fakta: `Menyisakan bintang katai putih di pusatnya yang memancarkan radiasi pengion.`,
+        radiusVisual: 18,
+        desc: `Cangkang gas ionisasi yang ditiupkan oleh bintang raksasa merah pada tahap akhir hidupnya.`,
+        fakta: `Akan menghilang ke ruang antarbintang dalam kurun puluhan ribu tahun, memperkaya galaksi dengan unsur berat.`,
         posisi3D: { x, y, z },
-        warna: '#88eedd',
-        icon: '💫',
-        data: { "Katalog": "Abell Planetary Nebula Catalog", "Jarak": dist }
+        warna: s % 2 === 0 ? '#4deeea' : '#ffaa55',
+        icon: '💥',
+        data: { "Katalog": "Strasbourg-ESO Catalogue of Galactic Planetary Nebulae", "Jarak": dist }
     });
 }
 
 // ----------------------------------------------------------------------------
-// 9. BINTANG EKSTREM & HYPERMASIF (55 objek)
+// 10. BINTANG EKSTREM & HYPERMASIF (120 OBJEK)
 // ----------------------------------------------------------------------------
 const famousStars = [
     { name: "Eta Carinae", gal: "Bima Sakti", dist: "7.500 ly", desc: "Biner hypermasif paling tidak stabil di Bima Sakti dengan massa 120-150 M☉.", fakta: "Pernah meletus pada 1843 hingga menjadi bintang kedua paling terang di langit malam.", x: 322, y: -38, z: -1095, c: "#ffbb44" },
@@ -353,6 +411,7 @@ famousStars.forEach((star, idx) => {
         kategori: 'Bintang Ekstrem',
         tipe: 'Bintang Hypermasif / Maharaksasa',
         jarakLy: star.dist,
+        radiusVisual: 16,
         desc: star.desc,
         fakta: star.fakta,
         posisi3D: { x: star.x, y: star.y, z: star.z },
@@ -362,32 +421,33 @@ famousStars.forEach((star, idx) => {
     });
 });
 
-for (let t = famousStars.length + 1; t <= 55; t++) {
-    const r = 1200 + (t * 110);
-    const th = t * 0.73;
-    const x = Math.round(Math.cos(th) * (r * 0.24));
-    const y = Math.round(Math.sin(t * 2.1) * 25);
-    const z = Math.round(-2600 + Math.sin(th) * (r * 0.24));
-    const dist = `${Math.round(r * 2)} ly`;
+for (let t = famousStars.length + 1; t <= 120; t++) {
+    const r = 700 + (t * 55);
+    const th = t * 0.44;
+    const x = Math.round(Math.cos(th) * (r * 0.26));
+    const y = Math.round(Math.sin(t * 1.7) * 25);
+    const z = Math.round(-2600 + Math.sin(th) * (r * 0.26));
+    const dist = `${Math.round(r * 1.5)} ly`;
 
     cosmicLibrary.push({
         id: `lib-star-${t}`,
-        nama: `Bintang Wolf-Rayet WR ${t + 10}`,
+        nama: `Bintang Variabel Maharaksasa HD ${140000 + t * 45}`,
         galaksi: 'Bima Sakti',
         kategori: 'Bintang Ekstrem',
-        tipe: 'Bintang Wolf-Rayet Masif',
+        tipe: t % 3 === 0 ? 'Maharaksasa Biru Terang (LBV)' : 'Maharaksasa Merah Berdenyut',
         jarakLy: dist,
-        desc: `Bintang masif tahap akhir yang melontarkan selubung hidrogen luarnya melalui angin supersonik.`,
-        fakta: `Kehilangan massa dengan laju jutaan kali lebih cepat daripada Matahari kita.`,
+        radiusVisual: 14,
+        desc: `Bintang raksasa dengan massa dan luminositas tinggi yang mendekati batas ketidakstabilan Eddington.`,
+        fakta: `Menghasilkan angin bintang berkecepatan ribuan km/detik dan akan meledak menjadi supernova Tipe II.`,
         posisi3D: { x, y, z },
-        warna: '#99bbff',
+        warna: t % 3 === 0 ? '#82b1ff' : '#ff8a80',
         icon: '⭐',
-        data: { "Spektrum": "WN/WC Wolf-Rayet", "Jarak": dist }
+        data: { "Katalog": "Henry Draper Catalogue (HD)", "Jarak": dist }
     });
 }
 
 // ----------------------------------------------------------------------------
-// 10. LUBANG HITAM & BINTANG NEUTRON / PULSAR (35 objek)
+// 11. LUBANG HITAM, PULSAR, MAGNETAR & BINER SINAR-X (80 OBJEK)
 // ----------------------------------------------------------------------------
 const famousBH = [
     { name: "Sagittarius A*", gal: "Bima Sakti", dist: "26.000 ly", desc: "Lubang hitam supermasif di pusat Galaksi Bima Sakti kita.", fakta: "Dicitrakan oleh Event Horizon Telescope (EHT) pada 2022, membuktikan cincin cahaya bayangannya.", x: 0, y: 0, z: -2600, c: "#ffaa22" },
@@ -406,6 +466,7 @@ famousBH.forEach((bh, idx) => {
         kategori: 'Lubang Hitam & Pulsar',
         tipe: 'Objek Kompak Relativistik',
         jarakLy: bh.dist,
+        radiusVisual: 18,
         desc: bh.desc,
         fakta: bh.fakta,
         posisi3D: { x: bh.x, y: bh.y, z: bh.z },
@@ -415,27 +476,28 @@ famousBH.forEach((bh, idx) => {
     });
 });
 
-for (let b = famousBH.length + 1; b <= 35; b++) {
-    const r = 2000 + (b * 150);
-    const th = b * 0.85;
-    const x = Math.round(Math.cos(th) * (r * 0.22));
-    const y = Math.round(Math.sin(b * 1.9) * 20);
-    const z = Math.round(-2600 + Math.sin(th) * (r * 0.22));
-    const dist = `${Math.round(r * 2)} ly`;
+for (let b = famousBH.length + 1; b <= 80; b++) {
+    const r = 1400 + (b * 75);
+    const th = b * 0.72;
+    const x = Math.round(Math.cos(th) * (r * 0.24));
+    const y = Math.round(Math.sin(b * 1.9) * 25);
+    const z = Math.round(-2600 + Math.sin(th) * (r * 0.24));
+    const dist = `${Math.round(r * 1.6)} ly`;
 
     cosmicLibrary.push({
         id: `lib-bh-${b}`,
-        nama: `Sumber Sinar-X Biner Kompak X-${b}`,
+        nama: b % 2 === 0 ? `Sumber Sinar-X Biner Kompak X-${b}` : `Pulsar Milidetik PSR J${1700 + b * 7}`,
         galaksi: 'Bima Sakti',
         kategori: 'Lubang Hitam & Pulsar',
-        tipe: 'Kandidat Lubang Hitam / Bintang Neutron',
+        tipe: b % 2 === 0 ? 'Kandidat Lubang Hitam Biner' : 'Bintang Neutron / Pulsar Cepat',
         jarakLy: dist,
+        radiusVisual: 16,
         desc: `Sistem bintang biner pemancar sinar-X intensif hasil akresi gas ke objek padat kompak.`,
-        fakta: `Terdeteksi oleh observatorium sinar-X antariksa NASA Chandra dan NuSTAR.`,
+        fakta: `Terdeteksi oleh observatorium sinar-X antariksa NASA Chandra, NuSTAR, dan Swift.`,
         posisi3D: { x, y, z },
-        warna: '#ff9955',
+        warna: b % 2 === 0 ? '#ff7733' : '#00e5ff',
         icon: '🕳️',
-        data: { "Tipe": "X-ray Binary Candidate", "Jarak": dist }
+        data: { "Tipe": "X-ray Binary / Pulsar", "Jarak": dist }
     });
 }
 
