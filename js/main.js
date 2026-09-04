@@ -72,7 +72,7 @@ const mouse = new THREE.Vector2();
 
 window.addEventListener('click', (event) => {
     if (event.clientX > window.innerWidth - 420 && document.getElementById('side-panel').classList.contains('active')) return;
-    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#top-right-actions') || event.target.closest('#tour-hud') || event.target.closest('#library-modal') || event.target.closest('#collision-hud')) return;
+    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#tour-hud') || event.target.closest('#library-modal') || event.target.closest('#collision-hud')) return;
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;

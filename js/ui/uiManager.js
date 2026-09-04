@@ -99,9 +99,11 @@ export function createUIManager(stageManager, interactiveObjects, cosmicLibrary 
     });
 
     // Reset View Button
-    resetBtn.addEventListener('click', () => {
-        stageManager.setStage(1);
-    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            stageManager.setStage(1);
+        });
+    }
 
     // Stage Navigation Buttons
     const stageButtons = document.querySelectorAll('.stage-btn');
