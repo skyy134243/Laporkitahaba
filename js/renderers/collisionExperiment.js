@@ -641,7 +641,8 @@ export function createCollisionExperiment(scene, camera, controls) {
             starburstAlpha = 1.0 * Math.sin(((simTime - 5.6) / 0.9) * Math.PI);
         }
 
-        const midPoint = new THREE.Vector3().addVectors(mwCenter, andCenter).multiplyScalar(0.5);
+        // Reuse already declared midPoint
+        midPoint.addVectors(mwCenter, andCenter).multiplyScalar(0.5);
 
         for (let i = 0; i < COUNT_STARBURST; i++) {
             const p = starburstInitial[i];
