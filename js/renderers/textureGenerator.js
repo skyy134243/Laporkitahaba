@@ -365,3 +365,74 @@ export function buatTeksturPartikelBundar() {
     textureCache.set(cacheKey, tex);
     return tex;
 }
+
+export function buatTeksturMilkomeda(size = 2048, maxAnisotropy = 16) {
+    const cacheKey = `galaxy_milkomeda_${size}`;
+    if (textureCache.has(cacheKey)) return textureCache.get(cacheKey);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size / 2;
+    const cy = size / 2;
+    const sk = size / 1024;
+
+    ctx.clearRect(0, 0, size, size);
+
+    // 1. Broad Radiant Stellar Halo (Giant Elliptical Envelope)
+    const maxHalo = size * 0.47;
+    const gHalo = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxHalo);
+    gHalo.addColorStop(0, 'rgba(255, 255, 252, 1)');
+    gHalo.addColorStop(0.12, 'rgba(255, 242, 210, 0.92)');
+    gHalo.addColorStop(0.28, 'rgba(250, 220, 168, 0.65)');
+    gHalo.addColorStop(0.50, 'rgba(215, 195, 185, 0.35)');
+    gHalo.addColorStop(0.72, 'rgba(160, 185, 230, 0.12)');
+    gHalo.addColorStop(0.92, 'rgba(120, 150, 210, 0.03)');
+    gHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = gHalo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxHalo, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Post-Merger Newborn Starburst Shells & Rings
+    for (let r = size * 0.12; r <= size * 0.38; r += size * 0.05) {
+        const knotCount = Math.round(180 * (r / (size * 0.38)) * sk);
+        for (let i = 0; i < knotCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = r + (Math.random() - 0.5) * size * 0.035;
+            const x = cx + Math.cos(angle) * dist;
+            const y = cy + Math.sin(angle) * dist * 0.88; // Ellipsoidal projection
+
+            const rnd = Math.random();
+            if (rnd > 0.82) {
+                ctx.fillStyle = '#ff6b88'; // Rose H II remnant
+            } else if (rnd > 0.45) {
+                ctx.fillStyle = '#a8dcff'; // Young massive blue stars from merger
+            } else {
+                ctx.fillStyle = '#ffeed0'; // Golden cream stars
+            }
+            ctx.globalAlpha = (0.25 + Math.random() * 0.55) * (1 - r / (size * 0.45));
+            ctx.fillRect(x, y, (1.2 + Math.random() * 2.2) * sk, (1.2 + Math.random() * 2.2) * sk);
+        }
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 3. Ultra-Bright Merged Supermassive Core
+    const gCore = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.15);
+    gCore.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gCore.addColorStop(0.25, 'rgba(255, 248, 225, 0.98)');
+    gCore.addColorStop(0.55, 'rgba(255, 222, 155, 0.7)');
+    gCore.addColorStop(1, 'rgba(255, 190, 110, 0)');
+
+    ctx.fillStyle = gCore;
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    const tex = createCrispCanvasTexture(canvas, maxAnisotropy);
+    textureCache.set(cacheKey, tex);
+    return tex;
+}
+

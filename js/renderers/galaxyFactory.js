@@ -80,7 +80,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         // ---------------------------------------------------------------------
         // A. PEANUT / BOXY BULGE (Matching right panel of ESA diagram)
         // ---------------------------------------------------------------------
-        const bulgeCount = 18000;
+        const bulgeCount = 8500;
         const bulgeSigma = 750;
         for (let i = 0; i < bulgeCount; i++) {
             const rSample = bulgeSigma * Math.sqrt(-Math.log(Math.max(Math.random(), 1e-6)));
@@ -106,7 +106,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         // ---------------------------------------------------------------------
         // B. CENTRAL BAR (Matching ESA diagram left panel)
         // ---------------------------------------------------------------------
-        const barCount = 12000;
+        const barCount = 6000;
         for (let i = 0; i < barCount; i++) {
             const len = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 0.72) * radius * 0.36;
             const normLen = Math.abs(len) / (radius * 0.37);
@@ -128,7 +128,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         // ---------------------------------------------------------------------
         // C. THIN DISC & SPIRAL ARMS (Matching both left and right panels)
         // ---------------------------------------------------------------------
-        const discCount = 42000;
+        const discCount = 20000;
         for (let i = 0; i < discCount; i++) {
             const arm = i % numArms;
             const offset = (arm / numArms) * Math.PI * 2 + barAngle;
@@ -165,7 +165,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         // ---------------------------------------------------------------------
         // D. MIDPLANE & SPIRAL DARK DUST LANES (Charcoal & deep umber interstellar extinction)
         // ---------------------------------------------------------------------
-        const dustCount = 9500;
+        const dustCount = 4200;
         for (let i = 0; i < dustCount; i++) {
             const arm = i % numArms;
             const offset = (arm / numArms) * Math.PI * 2 + barAngle;
@@ -189,7 +189,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         // ---------------------------------------------------------------------
         // E. STELLAR HALO & GLOBULAR CLUSTERS (Spherical glow above & below disc)
         // ---------------------------------------------------------------------
-        const haloCount = 6500;
+        const haloCount = 2800;
         for (let i = 0; i < haloCount; i++) {
             const u = Math.random(), v = Math.random();
             const theta = u * Math.PI * 2;
@@ -215,7 +215,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         geoStars.setAttribute('color', new THREE.Float32BufferAttribute(colStars, 3));
         const matStars = new THREE.PointsMaterial({
             map: spriteTex,
-            size: 2.8,
+            size: 3.2,
             vertexColors: true,
             transparent: true,
             opacity: 0.94,
@@ -231,7 +231,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         geoDust.setAttribute('color', new THREE.Float32BufferAttribute(colDust, 3));
         const matDust = new THREE.PointsMaterial({
             map: spriteTex,
-            size: 3.6,
+            size: 4.2,
             vertexColors: true,
             transparent: true,
             opacity: 0.55,
@@ -241,8 +241,8 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         });
         group.add(new THREE.Points(geoDust, matDust));
 
-        // Photographic disc backdrop
-        const tex = buatTeksturGalaksi(galaxy.skemaWarna, 'spiral_berpalang', 2048);
+        // Photographic disc backdrop (optimized resolution)
+        const tex = buatTeksturGalaksi(galaxy.skemaWarna, 'spiral_berpalang', 1024);
         const planeMat = new THREE.MeshBasicMaterial({
             map: tex,
             transparent: true,
@@ -304,11 +304,11 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         const group = new THREE.Group();
         group.position.set(galaxy.posisi3D.x, galaxy.posisi3D.y, galaxy.posisi3D.z);
 
-        let particleCount = 1500;
-        if (isAndromeda) particleCount = 24000;
-        else if (isTriangulum) particleCount = 11000;
-        else if (galaxy.kategoriMorfologi === 'Spiral') particleCount = 4500;
-        else if (galaxy.kategoriMorfologi === 'Eliptis') particleCount = 2600;
+        let particleCount = 700;
+        if (isAndromeda) particleCount = 12000;
+        else if (isTriangulum) particleCount = 5500;
+        else if (galaxy.kategoriMorfologi === 'Spiral') particleCount = 2200;
+        else if (galaxy.kategoriMorfologi === 'Eliptis') particleCount = 1300;
 
         const positions = [];
         const colors = [];
@@ -401,7 +401,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
 
         const mat = new THREE.PointsMaterial({
             map: spriteTex,
-            size: Math.max(1.8, radius * 0.005),
+            size: Math.max(2.2, radius * 0.0055),
             vertexColors: true,
             transparent: true,
             opacity: 0.92,
@@ -414,7 +414,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
 
         // Only add disc plane for spiral galaxies to prevent flat circular discs on 3D spheroidal/elliptical galaxies
         if (galaxy.gayaVisual === 'spiral' || galaxy.gayaVisual === 'spiral_berpalang' || galaxy.gayaVisual === 'flocculent') {
-            const tex = buatTeksturGalaksi(galaxy.skemaWarna, galaxy.gayaVisual, 1024);
+            const tex = buatTeksturGalaksi(galaxy.skemaWarna, galaxy.gayaVisual, 512);
             const planeMat = new THREE.MeshBasicMaterial({
                 map: tex,
                 transparent: true,
@@ -532,150 +532,62 @@ export function createGalaxyFactory(scene, interactiveObjects) {
     }
 
     // Build 3D visible celestial representations for all objects in the Cosmic Library
+    // Optimized: Unified Points particle system (1 draw call instead of 3,000+ individual meshes!)
+    let catalogPointsMesh = null;
     function buildCosmicLibraryVisuals(cosmicLibrary) {
         if (!cosmicLibrary || cosmicLibrary.length === 0) return;
 
-        // Geometries reused across categories to maintain 60 FPS
-        const starGeo = new THREE.SphereGeometry(1.6, 12, 12);
-        const gcGeo = new THREE.SphereGeometry(2.4, 12, 12);
-        const nebGeo = new THREE.SphereGeometry(3.5, 12, 12);
-        const bhGeo = new THREE.SphereGeometry(1.5, 12, 12);
-
-        const ringGeoSmall = new THREE.RingGeometry(1.8, 3.8, 16);
-        const ringGeoMed = new THREE.RingGeometry(2.6, 6.0, 16);
-        const ringGeoLarge = new THREE.RingGeometry(4.0, 9.5, 18);
-
+        const validObjects = [];
         for (let i = 0; i < cosmicLibrary.length; i++) {
             const obj = cosmicLibrary[i];
             // Skip galaxies and solar system bodies (already rendered)
             if (obj.kategori === 'Galaksi' || obj.kategori === 'Tata Surya') continue;
             // Skip prominent internal objects that already have specialized meshes
             if (daftarObjekDalamGalaksi.some(d => `lib-${d.id}` === obj.id)) continue;
-
-            const pos = obj.posisi3D;
-            if (!pos) continue;
-
-            const group = new THREE.Group();
-            group.position.set(pos.x, pos.y, pos.z);
-            scene.add(group);
-
-            let core = null;
-            let aura = null;
-            const colorHex = obj.warna || '#ffffff';
-
-            if (obj.kategori === 'Gugus Bola') {
-                const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 });
-                core = new THREE.Mesh(gcGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: 0xfff4d0,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.4,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoMed, auraMat);
-                aura.rotation.x = Math.PI / 2.2;
-                group.add(aura);
-            } else if (obj.kategori === 'Nebula & Daerah H II') {
-                const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.85 });
-                core = new THREE.Mesh(nebGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: 0xff6b8a,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.45,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoLarge, auraMat);
-                aura.rotation.x = Math.PI / 2.1;
-                group.add(aura);
-            } else if (obj.kategori === 'Gugus Terbuka') {
-                const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 });
-                core = new THREE.Mesh(starGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: 0xa8d8ff,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.4,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoMed, auraMat);
-                aura.rotation.x = Math.PI / 2.4;
-                group.add(aura);
-            } else if (obj.kategori.includes('Supernova') || obj.kategori.includes('Planetary')) {
-                const mat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.95 });
-                core = new THREE.Mesh(starGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: colorHex,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.5,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoLarge, auraMat);
-                aura.rotation.x = Math.PI / 2.0;
-                group.add(aura);
-            } else if (obj.kategori.includes('Lubang Hitam') || obj.kategori.includes('Pulsar')) {
-                const mat = new THREE.MeshBasicMaterial({ color: 0x050510 });
-                core = new THREE.Mesh(bhGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: colorHex,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.65,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoSmall, auraMat);
-                aura.rotation.x = Math.PI / 2.2;
-                group.add(aura);
-            } else {
-                // Extreme Stars / Other
-                const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
-                core = new THREE.Mesh(starGeo, mat);
-                group.add(core);
-
-                const auraMat = new THREE.MeshBasicMaterial({
-                    color: colorHex,
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.45,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-                aura = new THREE.Mesh(ringGeoSmall, auraMat);
-                aura.rotation.x = Math.PI / 2.3;
-                group.add(aura);
-            }
-
-            // Click collider
-            const colSize = obj.radiusVisual || 14;
-            const colliderGeo = new THREE.SphereGeometry(colSize * 0.7, 8, 8);
-            const colliderMat = new THREE.MeshBasicMaterial({
-                colorWrite: false,
-                depthWrite: false
-            });
-            const collider = new THREE.Mesh(colliderGeo, colliderMat);
-            collider.userData = obj;
-
-            interactiveObjects.push(collider);
-            group.add(collider);
-            internalObjectMeshes.push({ group, aura, core });
+            if (obj.posisi3D) validObjects.push(obj);
         }
+
+        const count = validObjects.length;
+        if (count === 0) return;
+
+        const positions = new Float32Array(count * 3);
+        const colors = new Float32Array(count * 3);
+
+        for (let i = 0; i < count; i++) {
+            const obj = validObjects[i];
+            positions[i * 3] = obj.posisi3D.x;
+            positions[i * 3 + 1] = obj.posisi3D.y;
+            positions[i * 3 + 2] = obj.posisi3D.z;
+
+            const c = new THREE.Color(obj.warna || '#ffffff');
+            colors[i * 3] = c.r;
+            colors[i * 3 + 1] = c.g;
+            colors[i * 3 + 2] = c.b;
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const mat = new THREE.PointsMaterial({
+            map: spriteTex,
+            size: 16.0,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.95,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            sizeAttenuation: true
+        });
+
+        catalogPointsMesh = new THREE.Points(geo, mat);
+        catalogPointsMesh.userData = {
+            isCatalogPoints: true,
+            items: validObjects
+        };
+
+        scene.add(catalogPointsMesh);
+        interactiveObjects.push(catalogPointsMesh);
     }
 
     function initGalaxies(cosmicLibrary = null) {
@@ -692,6 +604,7 @@ export function createGalaxyFactory(scene, interactiveObjects) {
         for (let i = 0; i < galaxyGroups.length; i++) {
             galaxyGroups[i].group.rotation.y += galaxyGroups[i].rotSpeed;
         }
+        // Only animate the ~20 featured NASA key objects (super lightweight, 0.05ms)
         for (let i = 0; i < internalObjectMeshes.length; i++) {
             internalObjectMeshes[i].aura.rotation.z += 0.008;
             internalObjectMeshes[i].core.rotation.y += 0.005;

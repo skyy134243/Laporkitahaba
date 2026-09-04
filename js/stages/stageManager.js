@@ -78,11 +78,11 @@ export function createStageManager(camera, controls, scene = null) {
         },
         5: {
             id: 5,
-            nama: "Semesta Lokal: 49 Galaksi",
-            cameraPos: new THREE.Vector3(15000, 42000, 36000),
-            targetPos: new THREE.Vector3(-7000, 3000, 10000),
-            keterangan: "Tampilan makrokosmik seluruh 49 galaksi di Grup Lokal secara bebas dan realistis tanpa garis penghubung, mencakup galaksi spiral, eliptis, katai sferoid, dan ireguler.",
-            skala: "Hingga 80.000 unit kosmik"
+            nama: "Semesta & Gugus Virgo: 64 Galaksi",
+            cameraPos: new THREE.Vector3(45000, 110000, 120000),
+            targetPos: new THREE.Vector3(10000, 5000, 20000),
+            keterangan: "Tampilan makrokosmik seluruh 64 galaksi termasuk Grup Lokal, Grup M81, Centaurus A, Sculptor, Canes Venatici, hingga Gugus Virgo raksasa (M87) tanpa batas pandang.",
+            skala: "Jangkauan jutaan tahun cahaya"
         }
     };
 

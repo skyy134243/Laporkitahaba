@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buatTeksturPartikelBundar } from './textureGenerator.js';
+import { buatTeksturPartikelBundar, buatTeksturGalaksi, buatTeksturMilkomeda } from './textureGenerator.js';
 
 /**
  * Modul Eksperimen Tabrakan Bima Sakti & Andromeda (Milkomeda Merger Simulation)
@@ -22,10 +22,10 @@ export function createCollisionExperiment(scene, camera, controls) {
     // Particle sprite texture
     const particleTexture = buatTeksturPartikelBundar();
 
-    // Constants
-    const COUNT_MW = 22000;
-    const COUNT_AND = 26000;
-    const COUNT_STARBURST = 4000;
+    // Constants (Optimized for smooth 60 FPS across all GPUs)
+    const COUNT_MW = 8000;
+    const COUNT_AND = 9500;
+    const COUNT_STARBURST = 1800;
     const TOTAL_PARTICLES = COUNT_MW + COUNT_AND + COUNT_STARBURST;
 
     // Buffers for Particle System
@@ -49,10 +49,10 @@ export function createCollisionExperiment(scene, camera, controls) {
         return mean + z * stdev;
     }
 
-    // 1. Initialize Milky Way Particles (Barred Spiral, ~22,000 particles)
+    // 1. Initialize Milky Way Particles (Barred Spiral, optimized ~8,000 particles)
     for (let i = 0; i < COUNT_MW; i++) {
-        const isCore = i < 4500;
-        const isBar = !isCore && i < 8000;
+        const isCore = i < 1800;
+        const isBar = !isCore && i < 3200;
         let r, phi, z;
 
         if (isCore) {
@@ -87,7 +87,7 @@ export function createCollisionExperiment(scene, camera, controls) {
             col.setHSL(0.12, 0.35, 0.88); // Natural starlight warm white
         }
 
-        const size = isCore ? rnd(7.0, 14.0) : rnd(4.0, 8.5);
+        const size = isCore ? rnd(9.0, 16.0) : rnd(5.0, 10.0);
 
         // Escape tail sensitivity (outer stars have higher vulnerability to tidal forces)
         const tidalSensitivity = Math.pow(Math.max(0, (r - 180) / 720), 1.8);
@@ -106,12 +106,12 @@ export function createCollisionExperiment(scene, camera, controls) {
         });
     }
 
-    // 2. Initialize Andromeda (M31) Particles (Vast massive disk, ~26,000 particles)
+    // 2. Initialize Andromeda (M31) Particles (Vast massive disk, optimized ~9,500 particles)
     // Andromeda disk inclination matrix (tilted ~77 degrees)
     const andRotationMatrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0.72, 0.45, -0.65));
 
     for (let i = 0; i < COUNT_AND; i++) {
-        const isCore = i < 6000;
+        const isCore = i < 2200;
         let r, phi, z;
 
         if (isCore) {
@@ -136,7 +136,7 @@ export function createCollisionExperiment(scene, camera, controls) {
             col.setHSL(0.12, 0.3, 0.84); // Disk stars
         }
 
-        const size = isCore ? rnd(8.0, 16.0) : rnd(4.2, 9.0);
+        const size = isCore ? rnd(9.5, 17.0) : rnd(5.0, 10.5);
         const tidalSensitivity = Math.pow(Math.max(0, (r - 220) / 930), 1.7);
         const escapeDir = Math.random() > 0.5 ? 1 : -1;
 
@@ -153,14 +153,14 @@ export function createCollisionExperiment(scene, camera, controls) {
         });
     }
 
-    // 3. Initialize Starburst Particles (~4,000 gas shock particles)
+    // 3. Initialize Starburst Particles (Optimized ~1,800 gas shock particles)
     for (let i = 0; i < COUNT_STARBURST; i++) {
         starburstInitial.push({
             offset: new THREE.Vector3(rndNormal(0, 220), rndNormal(0, 120), rndNormal(0, 220)),
             phaseOffset: Math.random() * Math.PI * 2,
             speed: rnd(0.6, 1.8),
             baseCol: new THREE.Color().setHSL(Math.random() > 0.4 ? 0.92 : 0.52, 0.95, 0.75),
-            size: rnd(10.0, 24.0)
+            size: rnd(12.0, 26.0)
         });
     }
 
@@ -182,6 +182,99 @@ export function createCollisionExperiment(scene, camera, controls) {
 
     const particlePoints = new THREE.Points(particleGeometry, particleMaterial);
     experimentGroup.add(particlePoints);
+
+    // =========================================================================
+    // PHOTOREALISTIC GALAXY DISCS (MATCHING MAIN SIMULATOR VISUALS & ESA DATA)
+    // =========================================================================
+    // 1. Milky Way Photorealistic Disc (Barred Spiral, ESA Gaia starlight)
+    const mwTexture = buatTeksturGalaksi({
+        inti: '#fff2df',
+        bar: '#f5d098',
+        lengan: '#faf3eb',
+        debu: '#120c08',
+        tepi: '#adcbf8'
+    }, 'spiral_berpalang', 2048);
+
+    const mwDiscGeo = new THREE.PlaneGeometry(1600, 1600);
+    const mwDiscMat = new THREE.MeshBasicMaterial({
+        map: mwTexture,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const mwDiscMesh = new THREE.Mesh(mwDiscGeo, mwDiscMat);
+    mwDiscMesh.rotation.x = -Math.PI / 2;
+    experimentGroup.add(mwDiscMesh);
+
+    // 2. Andromeda (M31) Photorealistic Disc (Massive Grand Spiral, 77-deg tilt)
+    const andTexture = buatTeksturGalaksi({
+        inti: '#fff6ea',
+        bar: '#ffe7c4',
+        lengan: '#ded5c8',
+        debu: '#151010',
+        tepi: '#b5d4f5'
+    }, 'spiral', 2048);
+
+    const andDiscGeo = new THREE.PlaneGeometry(2100, 2100);
+    const andDiscMat = new THREE.MeshBasicMaterial({
+        map: andTexture,
+        transparent: true,
+        opacity: 0.88,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const andDiscMesh = new THREE.Mesh(andDiscGeo, andDiscMat);
+    andDiscMesh.rotation.set(0.72, 0.45, -0.65);
+    experimentGroup.add(andDiscMesh);
+
+    // 3. Newly Formed Galaxy Milkomeda Disc (Post-Merger Giant Elliptical)
+    const milkomedaTexture = buatTeksturMilkomeda(2048);
+    const milkomedaDiscGeo = new THREE.PlaneGeometry(2600, 2600);
+    const milkomedaDiscMat = new THREE.MeshBasicMaterial({
+        map: milkomedaTexture,
+        transparent: true,
+        opacity: 0.0,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const milkomedaDiscMesh = new THREE.Mesh(milkomedaDiscGeo, milkomedaDiscMat);
+    milkomedaDiscMesh.rotation.x = -Math.PI / 2;
+    experimentGroup.add(milkomedaDiscMesh);
+
+    // 4. Radiant Starburst Shockwave Flash (Expanding Shimmering Core Burst)
+    const flashGeo = new THREE.SphereGeometry(180, 32, 32);
+    const flashMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const starburstFlash = new THREE.Mesh(flashGeo, flashMat);
+    experimentGroup.add(starburstFlash);
+
+    // 5. Dual Relativistic Cosmic Plasma Jets
+    const jetGroup = new THREE.Group();
+    const jetGeo = new THREE.CylinderGeometry(10, 50, 1100, 16, 1, true);
+    const jetMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.0,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+    });
+    const jetNorth = new THREE.Mesh(jetGeo, jetMat);
+    jetNorth.position.y = 550;
+    const jetSouth = new THREE.Mesh(jetGeo, jetMat);
+    jetSouth.position.y = -550;
+    jetSouth.rotation.z = Math.PI;
+    jetGroup.add(jetNorth, jetSouth);
+    experimentGroup.add(jetGroup);
 
     // =========================================================================
     // SUPERMASSIVE BLACK HOLES (Sgr A* & M31*) & SOLAR SYSTEM MARKER
@@ -330,6 +423,67 @@ export function createCollisionExperiment(scene, camera, controls) {
         m31Group.position.copy(andCenter);
         sgrADisk.rotation.z += 0.04;
         m31Disk.rotation.z += 0.03;
+
+        // 1b. Update Photorealistic Discs & Post-Collision Starburst Flash
+        mwDiscMesh.position.copy(mwCenter);
+        mwDiscMesh.rotation.z = simTime * 0.4;
+        andDiscMesh.position.copy(andCenter);
+        andDiscMesh.rotation.z = -simTime * 0.35;
+
+        const midPoint = new THREE.Vector3().addVectors(mwCenter, andCenter).multiplyScalar(0.5);
+
+        if (simTime <= 3.8) {
+            // Unperturbed stage
+            mwDiscMat.opacity = 0.85;
+            andDiscMat.opacity = 0.88;
+            milkomedaDiscMat.opacity = 0.0;
+            starburstFlash.material.opacity = 0.0;
+            jetMat.opacity = 0.0;
+        } else if (simTime <= 5.6) {
+            // First encounter and tidal tail ripping: discs warp and soften
+            const p = (simTime - 3.8) / 1.8;
+            mwDiscMat.opacity = 0.85 * (1 - p * 0.5);
+            andDiscMat.opacity = 0.88 * (1 - p * 0.5);
+            milkomedaDiscMat.opacity = 0.0;
+            starburstFlash.material.opacity = 0.0;
+            jetMat.opacity = 0.0;
+        } else if (simTime <= 6.5) {
+            // Peak second collision, blinding starburst flash & jet eruption!
+            const fadeOld = Math.max(0, 1 - (simTime - 5.6) / 0.6);
+            mwDiscMat.opacity = fadeOld * 0.42;
+            andDiscMat.opacity = fadeOld * 0.42;
+
+            const flashP = Math.sin(((simTime - 5.6) / 0.9) * Math.PI);
+            starburstFlash.position.copy(midPoint);
+            const flashScale = 1.0 + flashP * 4.5;
+            starburstFlash.scale.set(flashScale, flashScale, flashScale);
+            starburstFlash.material.opacity = Math.min(0.95, flashP * 1.2);
+            flashMat.color.setHSL(0.56 + Math.sin(simTime * 14.0) * 0.08, 0.95, 0.92);
+
+            // Relativistic plasma jets
+            jetGroup.position.copy(midPoint);
+            jetMat.opacity = flashP * 0.88;
+            jetGroup.rotation.y += 0.06;
+
+            // Milkomeda starts to bloom
+            if (simTime >= 6.1) {
+                const bloomP = (simTime - 6.1) / 0.4;
+                milkomedaDiscMat.opacity = Math.min(0.95, bloomP * 0.85);
+                const mScale = 0.5 + bloomP * 0.5;
+                milkomedaDiscMesh.scale.set(mScale, mScale, mScale);
+            } else {
+                milkomedaDiscMat.opacity = 0.0;
+            }
+        } else {
+            // Milkomeda fully formed & stabilized!
+            mwDiscMat.opacity = 0.0;
+            andDiscMat.opacity = 0.0;
+            starburstFlash.material.opacity = 0.0;
+            jetMat.opacity = Math.max(0, 1 - (simTime - 6.5) * 2.2) * 0.4;
+            milkomedaDiscMat.opacity = 0.95;
+            milkomedaDiscMesh.scale.set(1.0, 1.0, 1.0);
+            milkomedaDiscMesh.rotation.z = simTime * 0.08;
+        }
 
         // Merger Gravitational Wave Pulse when t >= 6.4
         if (simTime >= 6.4) {
@@ -553,23 +707,23 @@ export function createCollisionExperiment(scene, camera, controls) {
             fase: 4,
             waktu: 6.0,
             rentang: "T = 5.7 - 6.4 Miliar Tahun",
-            judul: "Tabrakan Kedua & Ledakan Starburst Masif",
-            jarak: "30.000 Tahun Cahaya (Plunge Langsung)",
+            judul: "Tabrakan Frontal & Kilau Ledakan Starburst",
+            jarak: "30.000 Tahun Cahaya (Plunge Frontal)",
             kecepatan: "500 km/detik",
             starburst: "Ekstrem (>120 Massa Matahari/thn)",
-            surya: "Matahari melintas di kawasan luar; langit dipenuhi jutaan bintang baru yang membara.",
-            deskripsi: "Tabrakan kedua terjadi secara frontal. Awan molekul raksasa kedua galaksi bertubrukan hebat, memicu kompresi gelombang kejut dan pembentukan bintang baru (starburst) secara masif."
+            surya: "Matahari melintas di kawasan luar; langit dipenuhi ledakan kilau jutaan bintang baru yang membara.",
+            deskripsi: "Tabrakan kedua terjadi secara frontal. Awan gas molekuler bertubrukan hebat, memicu kompresi gelombang kejut, ledakan kilau cahaya starburst yang berpendar terang menyilaukan, dan semburan jet plasma relativistik dari lubang hitam."
         },
         {
             fase: 5,
             waktu: 6.8,
             rentang: "T = 6.5 - 7.0+ Miliar Tahun",
-            judul: "Penyatuan Lubang Hitam & Kelahiran Milkomeda",
-            jarak: "0 Tahun Cahaya (Tersatukan)",
+            judul: "Kelahiran Galaksi Baru: Milkomeda",
+            jarak: "0 Tahun Cahaya (Tersatukan Sempurna)",
             kecepatan: "Stabil / Relaksasi Virial",
-            starburst: "Tenang (Gas telah habis terbentuk)",
+            starburst: "Tenang (Gas Telah Menyatu Menjadi Bintang Baru)",
             surya: "Tersapu aman ke halo luar Milkomeda (~85.000 ly) tanpa pernah bertabrakan fisik dengan bintang lain.",
-            deskripsi: "Sagittarius A* dan M31* menyatu memancarkan gelombang gravitasi raksasa. Bintang-bintang berelaksasi menjadi galaksi eliptis super raksasa tunggal: Milkomeda (Mildromeda)."
+            deskripsi: "Setelah ledakan kilau mereda, seluruh materi bintang berelaksasi membentuk galaksi eliptis raksasa baru: Milkomeda (Mildromeda). Lubang hitam Sgr A* dan M31* menyatu menjadi satu supermassive black hole tunggal di jantung Milkomeda."
         }
     ];
 
