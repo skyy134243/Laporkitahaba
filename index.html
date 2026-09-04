@@ -85,7 +85,62 @@
 
     <!-- Top Right Actions -->
     <div id="top-right-actions">
+        <button id="cosmic-lib-btn" class="action-btn highlight">📚 Perpustakaan Kosmik (500+ Objek)</button>
         <button id="reset-view-btn" class="action-btn">🏠 Tata Surya</button>
+    </div>
+
+    <!-- Library Modal: 500+ Objek Astronomi NASA / ESA -->
+    <div id="library-modal" class="library-modal" aria-label="Perpustakaan Kosmik">
+        <div class="library-container">
+            <header class="library-header">
+                <div class="library-title-group">
+                    <h2>📚 Perpustakaan Kosmik Grup Lokal & Bima Sakti</h2>
+                    <p>Katalog 575 objek astronomi berdasar data resmi NASA NED, SIMBAD, ESA Gaia DR3, dan Observatorium Antariksa Hubble & JWST.</p>
+                </div>
+                <button id="close-lib-btn" class="lib-close-btn" title="Tutup Perpustakaan">&times;</button>
+            </header>
+
+            <div class="library-controls">
+                <div class="lib-search-box">
+                    <span class="lib-search-icon">🔍</span>
+                    <input type="text" id="lib-search-input" placeholder="Cari di 575 objek (contoh: Omega Centauri, 30 Doradus, M31*, R136a1, Betelgeuse, Crab Nebula)...">
+                </div>
+                
+                <div class="lib-filters">
+                    <div class="lib-filter-group" id="lib-category-filters">
+                        <span class="filter-label">KATEGORI:</span>
+                        <button class="lib-cat-btn active" data-cat="all">Semua (575)</button>
+                        <button class="lib-cat-btn" data-cat="Galaksi">🌌 Galaksi (49)</button>
+                        <button class="lib-cat-btn" data-cat="Gugus Bola">⚪ Gugus Bola (193)</button>
+                        <button class="lib-cat-btn" data-cat="Nebula & Daerah H II">🌸 Nebula & H II (75)</button>
+                        <button class="lib-cat-btn" data-cat="Gugus Terbuka">✨ Gugus Terbuka (65)</button>
+                        <button class="lib-cat-btn" data-cat="Bintang Ekstrem">⭐ Bintang Ekstrem (55)</button>
+                        <button class="lib-cat-btn" data-cat="Planetary & Sisa Supernova">💥 Supernova/Planetary (55)</button>
+                        <button class="lib-cat-btn" data-cat="Lubang Hitam & Pulsar">🕳️ Lubang Hitam (35)</button>
+                        <button class="lib-cat-btn" data-cat="Tata Surya">🪐 Tata Surya & Misi NASA (48)</button>
+                    </div>
+                    <div class="lib-filter-group" id="lib-galaxy-filters">
+                        <span class="filter-label">HOST / LOKASI:</span>
+                        <button class="lib-host-btn active" data-host="all">Semua Lokasi</button>
+                        <button class="lib-host-btn" data-host="Bima Sakti">Bima Sakti</button>
+                        <button class="lib-host-btn" data-host="Galaksi Andromeda">Andromeda (M31)</button>
+                        <button class="lib-host-btn" data-host="Awan Magellan Besar">LMC</button>
+                        <button class="lib-host-btn" data-host="Awan Magellan Kecil">SMC</button>
+                        <button class="lib-host-btn" data-host="Galaksi Triangulum">Triangulum (M33)</button>
+                        <button class="lib-host-btn" data-host="Satelit">Katai / Satelit Lain</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="library-stats-bar">
+                <span id="lib-count-label">Menampilkan 575 objek</span>
+                <span class="lib-hint">💡 Klik tombol <b>🚀 Terbang</b> pada kartu objek untuk navigasi kamera 3D instan ke koordinat objek.</span>
+            </div>
+
+            <div class="library-grid" id="library-grid">
+                <!-- Dynamic cards populated by UIManager -->
+            </div>
+        </div>
     </div>
 
     <!-- Right Side Panel: Detail Objek & Fakta NASA -->

@@ -82,18 +82,28 @@ export function createStageManager(camera, controls) {
         return stage;
     }
 
-    function flyToObject(objectMesh, customDistance = null) {
+    function flyToObject(target, customDistance = null) {
+        if (!target) return;
         const targetPos = new THREE.Vector3();
-        objectMesh.getWorldPosition(targetPos);
+        let size = 10;
 
-        let size = 6;
-        if (objectMesh.geometry) {
-            if (!objectMesh.geometry.boundingSphere) objectMesh.geometry.computeBoundingSphere();
-            const maxScale = Math.max(objectMesh.scale.x, objectMesh.scale.y, objectMesh.scale.z, 0.001);
-            size = (objectMesh.geometry.boundingSphere ? objectMesh.geometry.boundingSphere.radius : 6) * maxScale;
+        if (target.isVector3) {
+            targetPos.copy(target);
+        } else if (target.isObject3D || typeof target.getWorldPosition === 'function') {
+            target.getWorldPosition(targetPos);
+            if (target.geometry) {
+                if (!target.geometry.boundingSphere) target.geometry.computeBoundingSphere();
+                const maxScale = Math.max(target.scale.x, target.scale.y, target.scale.z, 0.001);
+                size = (target.geometry.boundingSphere ? target.geometry.boundingSphere.radius : 8) * maxScale;
+            }
+        } else if (target.posisi3D) {
+            targetPos.set(target.posisi3D.x, target.posisi3D.y, target.posisi3D.z);
+            size = target.radiusVisual || 16;
+        } else if (target.position) {
+            targetPos.set(target.position.x, target.position.y, target.position.z);
         }
 
-        const distance = customDistance || THREE.MathUtils.clamp(size * 5.5, 14, 3800);
+        const distance = customDistance || THREE.MathUtils.clamp(size * 5.5, 14, 4200);
         const dir = camera.position.clone().sub(controls.target);
         if (dir.lengthSq() < 0.0001) dir.set(0, 0.35, 1);
         dir.normalize();

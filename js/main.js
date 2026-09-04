@@ -4,6 +4,7 @@ import { createCelestialFactory } from './renderers/celestialFactory.js';
 import { createGalaxyFactory } from './renderers/galaxyFactory.js';
 import { createStageManager } from './stages/stageManager.js';
 import { createUIManager } from './ui/uiManager.js';
+import { cosmicLibrary } from './data/cosmicLibraryData.js';
 
 // Setup Three.js Scene
 const scene = new THREE.Scene();
@@ -55,7 +56,7 @@ const celestialFactory = createCelestialFactory(scene, interactiveObjects);
 const galaxyFactory = createGalaxyFactory(scene, interactiveObjects);
 const stageManager = createStageManager(camera, controls);
 
-const uiManager = createUIManager(stageManager, interactiveObjects, (selectedMesh) => {
+const uiManager = createUIManager(stageManager, interactiveObjects, cosmicLibrary, (selectedMesh) => {
     // Callback when an object is selected
 });
 
