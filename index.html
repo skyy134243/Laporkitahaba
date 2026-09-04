@@ -85,6 +85,7 @@
 
     <!-- Top Right Actions -->
     <div id="top-right-actions">
+        <button id="collision-exp-btn" class="action-btn experiment-btn">💥 Eksperimen Tabrakan Galaksi</button>
         <button id="cosmic-lib-btn" class="action-btn highlight">📚 Perpustakaan Kosmik (1.000+ Objek)</button>
         <button id="reset-view-btn" class="action-btn">🏠 Tata Surya</button>
     </div>
@@ -166,6 +167,85 @@
             <div class="sp-sumber" id="sp-sumber">Sumber: NASA / ESA</div>
         </div>
     </section>
+
+    <!-- Galaxy Collision Experiment HUD -->
+    <div id="collision-hud" class="collision-hud" aria-label="Kontrol Eksperimen Tabrakan Galaksi">
+        <div class="collision-hud-container">
+            <div class="collision-header">
+                <div class="collision-title-wrap">
+                    <span class="collision-badge">🔬 LABORATORIUM ASTROFISIKA</span>
+                    <h3>💥 Eksperimen Tabrakan: Bima Sakti & Andromeda (Milkomeda)</h3>
+                    <p>Simulasi evolusi merger gravitasi berdasarkan data superkomputer NASA Hubble & ESA Gaia</p>
+                </div>
+                <button id="close-collision-btn" class="collision-close-btn" title="Keluar dari Eksperimen">&times; Keluar Eksperimen</button>
+            </div>
+
+            <!-- Real-time metrics grid -->
+            <div class="collision-metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">WAKTU SIMULASI</div>
+                    <div class="metric-value" id="exp-time-label">T +0.0 Miliar Tahun</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">JARAK KEDUA INTI</div>
+                    <div class="metric-value" id="exp-dist-label">2.500.000 ly</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">KECEPATAN RELATIF</div>
+                    <div class="metric-value" id="exp-speed-label">110 km/detik</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">LAJU STARBURST</div>
+                    <div class="metric-value" id="exp-starburst-label">Normal (1-2 M☉/thn)</div>
+                </div>
+                <div class="metric-card highlight-sun">
+                    <div class="metric-label">☀️ NASIB TATA SURYA KITA</div>
+                    <div class="metric-value" id="exp-sun-label">Aman di Lengan Orion</div>
+                </div>
+            </div>
+
+            <!-- Phase narrative & scientific fact -->
+            <div class="collision-phase-box">
+                <div class="phase-badge-title">
+                    <span class="phase-number-badge" id="exp-phase-badge">FASE 1</span>
+                    <span class="phase-title-text" id="exp-phase-title">Masa Kini & Pendekatan Gravitasi</span>
+                </div>
+                <p class="phase-desc-text" id="exp-phase-desc">Bima Sakti dan Andromeda saling mendekat di bawah tarikan gravitasi timbal balik dan materi gelap (Dark Matter).</p>
+            </div>
+
+            <!-- Timeline scrubber slider -->
+            <div class="collision-timeline-controls">
+                <div class="timeline-slider-row">
+                    <span class="timeline-time-tag">Masa Kini (T=0)</span>
+                    <input type="range" id="exp-timeline-slider" min="0.0" max="7.0" step="0.05" value="0.0">
+                    <span class="timeline-time-tag">Milkomeda (T=+7.0 Ga)</span>
+                </div>
+
+                <!-- Playback & Phase buttons -->
+                <div class="collision-action-row">
+                    <div class="playback-btn-group">
+                        <button id="exp-play-btn" class="exp-btn primary">⏸ Pause</button>
+                        <button id="exp-reset-btn" class="exp-btn">🔄 Reset</button>
+                        <div class="speed-selector">
+                            <span class="speed-label">Kecepatan:</span>
+                            <button class="exp-speed-btn active" data-speed="1">1x</button>
+                            <button class="exp-speed-btn" data-speed="2">2x</button>
+                            <button class="exp-speed-btn" data-speed="4">4x</button>
+                        </div>
+                    </div>
+
+                    <!-- Phase jump buttons -->
+                    <div class="phase-jump-group">
+                        <button class="phase-jump-btn active" data-phase="1">Fase 1 (T=0)</button>
+                        <button class="phase-jump-btn" data-phase="2">Fase 2 (Papasan 1)</button>
+                        <button class="phase-jump-btn" data-phase="3">Fase 3 (Pembalikan)</button>
+                        <button class="phase-jump-btn" data-phase="4">Fase 4 (Starburst)</button>
+                        <button class="phase-jump-btn" data-phase="5">Fase 5 (Milkomeda)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Cinematic Tour HUD -->
     <div id="tour-hud">

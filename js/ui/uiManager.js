@@ -1,4 +1,4 @@
-export function createUIManager(stageManager, interactiveObjects, cosmicLibrary = [], onObjectSelected) {
+export function createUIManager(stageManager, interactiveObjects, cosmicLibrary = [], onObjectSelected, collisionExperiment = null) {
     const dasbor = document.getElementById('dasbor-kiri');
     const toggleBtn = document.getElementById('dasbor-toggle');
     const sidePanel = document.getElementById('side-panel');
@@ -20,6 +20,24 @@ export function createUIManager(stageManager, interactiveObjects, cosmicLibrary 
     const libHostButtons = document.querySelectorAll('.lib-host-btn');
     const libGrid = document.getElementById('library-grid');
     const libCountLabel = document.getElementById('lib-count-label');
+
+    // Collision Experiment HUD Elements
+    const collisionExpBtn = document.getElementById('collision-exp-btn');
+    const collisionHud = document.getElementById('collision-hud');
+    const closeCollisionBtn = document.getElementById('close-collision-btn');
+    const expTimeLabel = document.getElementById('exp-time-label');
+    const expDistLabel = document.getElementById('exp-dist-label');
+    const expSpeedLabel = document.getElementById('exp-speed-label');
+    const expStarburstLabel = document.getElementById('exp-starburst-label');
+    const expSunLabel = document.getElementById('exp-sun-label');
+    const expPhaseBadge = document.getElementById('exp-phase-badge');
+    const expPhaseTitle = document.getElementById('exp-phase-title');
+    const expPhaseDesc = document.getElementById('exp-phase-desc');
+    const expTimelineSlider = document.getElementById('exp-timeline-slider');
+    const expPlayBtn = document.getElementById('exp-play-btn');
+    const expResetBtn = document.getElementById('exp-reset-btn');
+    const expSpeedButtons = document.querySelectorAll('.exp-speed-btn');
+    const phaseJumpButtons = document.querySelectorAll('.phase-jump-btn');
 
     // Dashboard folding modes (Penuh -> Ringkas -> Sembunyi -> Penuh)
     const modes = ['penuh', 'ringkas', 'sembunyi'];
@@ -395,6 +413,92 @@ export function createUIManager(stageManager, interactiveObjects, cosmicLibrary 
         tourBtn.classList.remove('playing');
         tourBtn.innerText = '🎬 Tur Sinematik';
         tourHud.classList.remove('active');
+    });
+
+    // =========================================================================
+    // COLLISION EXPERIMENT EVENT HANDLERS
+    // =========================================================================
+    function onSimulationStateUpdate(state) {
+        if (!state) return;
+        const { simTime, isPlaying, speedMultiplier, phaseInfo } = state;
+
+        if (expTimeLabel) expTimeLabel.textContent = `T +${simTime.toFixed(2)} Miliar Tahun`;
+        if (expDistLabel) expDistLabel.textContent = phaseInfo.jarak;
+        if (expSpeedLabel) expSpeedLabel.textContent = phaseInfo.kecepatan;
+        if (expStarburstLabel) expStarburstLabel.textContent = phaseInfo.starburst;
+        if (expSunLabel) expSunLabel.textContent = phaseInfo.surya;
+        if (expPhaseBadge) expPhaseBadge.textContent = `FASE ${phaseInfo.fase}`;
+        if (expPhaseTitle) expPhaseTitle.textContent = phaseInfo.judul;
+        if (expPhaseDesc) expPhaseDesc.textContent = phaseInfo.deskripsi;
+        if (expTimelineSlider) expTimelineSlider.value = simTime.toFixed(2);
+
+        if (expPlayBtn) {
+            expPlayBtn.innerHTML = isPlaying ? '⏸ Pause' : '▶ Putar';
+        }
+
+        phaseJumpButtons.forEach(btn => {
+            if (parseInt(btn.dataset.phase) === phaseInfo.fase) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    if (collisionExpBtn && collisionExperiment) {
+        collisionExpBtn.addEventListener('click', () => {
+            closeCosmicLibrary();
+            sidePanel.classList.remove('active');
+            applyDashboardMode('sembunyi');
+
+            collisionHud.classList.add('active');
+            collisionExperiment.startExperiment(onSimulationStateUpdate);
+        });
+    }
+
+    if (closeCollisionBtn && collisionExperiment) {
+        closeCollisionBtn.addEventListener('click', () => {
+            collisionHud.classList.remove('active');
+            collisionExperiment.stopExperiment();
+            applyDashboardMode('penuh');
+        });
+    }
+
+    if (expPlayBtn && collisionExperiment) {
+        expPlayBtn.addEventListener('click', () => {
+            collisionExperiment.togglePlay();
+        });
+    }
+
+    if (expResetBtn && collisionExperiment) {
+        expResetBtn.addEventListener('click', () => {
+            collisionExperiment.reset();
+        });
+    }
+
+    if (expTimelineSlider && collisionExperiment) {
+        expTimelineSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            collisionExperiment.setTime(val);
+        });
+    }
+
+    expSpeedButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!collisionExperiment) return;
+            const spd = parseFloat(btn.dataset.speed);
+            collisionExperiment.setSpeed(spd);
+            expSpeedButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    phaseJumpButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!collisionExperiment) return;
+            const phase = parseInt(btn.dataset.phase);
+            collisionExperiment.jumpToPhase(phase);
+        });
     });
 
     return {

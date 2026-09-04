@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createCelestialFactory } from './renderers/celestialFactory.js';
 import { createGalaxyFactory } from './renderers/galaxyFactory.js';
+import { createCollisionExperiment } from './renderers/collisionExperiment.js';
 import { createStageManager } from './stages/stageManager.js';
 import { createUIManager } from './ui/uiManager.js';
 import { cosmicLibrary } from './data/cosmicLibraryData.js';
@@ -55,10 +56,11 @@ const interactiveObjects = [];
 const celestialFactory = createCelestialFactory(scene, interactiveObjects);
 const galaxyFactory = createGalaxyFactory(scene, interactiveObjects);
 const stageManager = createStageManager(camera, controls, scene);
+const collisionExperiment = createCollisionExperiment(scene, camera, controls);
 
 const uiManager = createUIManager(stageManager, interactiveObjects, cosmicLibrary, (selectedMesh) => {
     // Callback when an object is selected
-});
+}, collisionExperiment);
 
 // Initialize Scene Elements
 celestialFactory.initSolarSystem();
@@ -70,7 +72,7 @@ const mouse = new THREE.Vector2();
 
 window.addEventListener('click', (event) => {
     if (event.clientX > window.innerWidth - 420 && document.getElementById('side-panel').classList.contains('active')) return;
-    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#top-right-actions') || event.target.closest('#tour-hud') || event.target.closest('#library-modal')) return;
+    if (event.target.closest('#dasbor-kiri') || event.target.closest('#cosmic-stages-bar') || event.target.closest('#search-container') || event.target.closest('#top-right-actions') || event.target.closest('#tour-hud') || event.target.closest('#library-modal') || event.target.closest('#collision-hud')) return;
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -93,6 +95,7 @@ function animate() {
     celestialFactory.update(delta);
     galaxyFactory.update(delta);
     stageManager.update(delta);
+    collisionExperiment.update(delta);
 
     controls.update();
     renderer.render(scene, camera);
