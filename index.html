@@ -27,7 +27,7 @@
         <button class="stage-btn" data-stage="2">⭐ Fase 2: Bintang Tetangga</button>
         <button class="stage-btn" data-stage="3">🌌 Fase 3: Bima Sakti</button>
         <button class="stage-btn" data-stage="4">🔭 Fase 4: Andromeda & M33</button>
-        <button class="stage-btn" data-stage="5">🌐 Fase 5: Web 49 Galaksi</button>
+        <button class="stage-btn" data-stage="5">🌐 Fase 5: Semesta 49 Galaksi</button>
         <button id="tour-btn" class="tour-btn">🎬 Tur Sinematik</button>
     </nav>
 
@@ -35,7 +35,7 @@
     <div id="search-container">
         <div id="search-input-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" placeholder="Cari galaksi, bintang, planet, wahana NASA..." autocomplete="off">
+            <input type="text" id="search-input" placeholder="Cari galaksi, objek NASA (30 Doradus, M31*, NGC 604...), bintang, planet..." autocomplete="off">
         </div>
         <div id="search-results"></div>
     </div>
@@ -47,12 +47,12 @@
         <div id="info">
             <h3>🌌 Ensiklopedia Kosmik & 49 Galaksi NASA</h3>
             <div class="isi-lengkap">
-                <p>• <b>Jelajah Interaktif</b>: Klik pada galaksi, bintang, planet, eksoplanet, wahana antariksa, atau lubang hitam mana pun untuk <b>terbang dan zoom otomatis</b> mengamatinya secara mendalam.<br>
-                • <b>5 Alur Fase Kosmik</b>: Gunakan tombol fase di bagian atas layar untuk berpindah skala dari lingkungan Tata Surya hingga jaring kosmik 49 galaksi di Grup Lokal.<br>
-                • <b>Data Astronomi NASA</b>: Posisi, kecepatan radial, jarak, dan tipe morfologi 49 galaksi dimodelkan berdasarkan data <i>NASA/IPAC Extragalactic Database (NED)</i>, <i>ESA Gaia DR3</i>, dan <i>Teleskop Luar Angkasa Hubble</i>.<br>
-                • <b>Kamera Bebas</b>: Klik & geser untuk rotasi orbit 360°, scroll mouse untuk zoom manual, dan tombol kanan/geser dua jari untuk panning.</p>
+                <p>• <b>Posisi Sejati Tata Surya</b>: Mengacu pada data pemetaan bintang <b>ESA Gaia</b> dan NASA, Tata Surya kita <b>berada tepat di dalam piringan bintang Bima Sakti</b> pada kawasan <b>Lengan/Taji Orion</b>, berjarak ≈26.000 tahun cahaya dari lubang hitam pusat Sagittarius A*.<br>
+                • <b>Jelajah Objek Spesifik NASA</b>: Setiap galaksi kini dilengkapi objek-objek penting hasil riset teleskop NASA/ESA (seperti <i>30 Doradus</i> & <i>R136a1</i> di LMC, <i>NGC 346</i> di SMC, <i>Mayall II</i> & <i>M31*</i> di Andromeda, <i>NGC 604</i> & <i>M33 X-7</i> di Triangulum, <i>M54</i> di Sagittarius dSph, dsb.). Klik objek untuk zoom otomatis!<br>
+                • <b>Visualisasi Realistis Tanpa Garis</b>: Tampilan galaksi dan semesta kini bersih tanpa garis penghubung artifisial, menampilkan struktur partikel volumetrik 3D murni dan gradasi warna fotometrik ESA.<br>
+                • <b>5 Alur Fase Kosmik</b>: Gunakan tombol fase di bagian atas layar untuk berpindah skala secara runtut dan dinamis.</p>
                 <div class="catatan">
-                    Mencakup Bima Sakti, Andromeda (M31), Triangulum (M33), serta 46 galaksi katai pendamping (LMC, SMC, Fornax, Sculptor, Draco, Leo I-V, IC 10, IC 1613, WLM, dsb.) lengkap dengan struktur volumetrik 3D dan jaring gravitasi filamen kosmik.
+                    Memuat total 49 galaksi nyata di lingkungan kosmik Bima Sakti (Grup Lokal), dengan parameter astronomi resmi dari <i>NASA/IPAC Extragalactic Database (NED)</i>, <i>ESA Gaia DR3</i>, dan <i>Teleskop Luar Angkasa Hubble</i>.
                 </div>
             </div>
         </div>
@@ -73,11 +73,13 @@
             <div><span style="background:#00f5d4"></span>Planet & Bulan Tata Surya</div>
             <div><span style="background:#3a86ff"></span>Wahana Antariksa NASA (Hubble, JWST, Voyager)</div>
             <div><span style="background:#f72585"></span>Eksoplanet Terkonfirmasi (Proxima b, TRAPPIST-1)</div>
+            <div><span style="background:#ff7aa8"></span>Daerah H II / Pembibitan Bintang (30 Doradus, NGC 604)</div>
+            <div><span style="background:#fff0c0"></span>Gugus Bola Ekstrasurya (Mayall II, M54, Fornax 3)</div>
             <div><span style="background:#a78bfa"></span>Galaksi Spiral (Bima Sakti, Andromeda, M33)</div>
             <div><span style="background:#fbbf24"></span>Galaksi Eliptis & Katai Sferoid</div>
             <div><span style="background:#38bdf8"></span>Galaksi Katai Ireguler & Starburst</div>
-            <div><span style="background:#ff5533"></span>Pulsar & Lubang Hitam Supermasif (Sgr A*)</div>
-            <div><span style="background:#6b46c1"></span>Filamen Jaring Kosmik (Cosmic Web)</div>
+            <div><span style="background:#ff5533"></span>Pulsar & Lubang Hitam Supermasif (Sgr A*, M31*)</div>
+            <div><span style="background:#ffffff"></span>Penanda Lokasi Tata Surya di Lengan Orion</div>
         </div>
     </aside>
 
@@ -99,7 +101,7 @@
         </div>
 
         <div class="sp-section" id="sp-data-section">
-            <div class="sp-label">Data Kunci NASA / NED</div>
+            <div class="sp-label">Data Kunci NASA / NED / ESA</div>
             <div class="sp-data" id="sp-data">-</div>
         </div>
         

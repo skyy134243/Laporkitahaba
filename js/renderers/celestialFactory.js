@@ -132,7 +132,7 @@ export function createCelestialFactory(scene, interactiveObjects) {
         return group;
     }
 
-    function buildBlackHole(name, position, radius = 1.8) {
+    function buildBlackHole(name, position, radius = 2.4) {
         const group = new THREE.Group();
         group.position.copy(position);
         scene.add(group);
@@ -141,14 +141,14 @@ export function createCelestialFactory(scene, interactiveObjects) {
         group.add(eventHorizon);
 
         const disk1 = new THREE.Mesh(
-            new THREE.RingGeometry(radius * 1.3, radius * 3.5, 48),
+            new THREE.RingGeometry(radius * 1.3, radius * 3.8, 48),
             new THREE.MeshBasicMaterial({ color: 0xffa500, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
         );
         disk1.rotation.x = Math.PI / 2.3;
         group.add(disk1);
 
         const disk2 = new THREE.Mesh(
-            new THREE.RingGeometry(radius * 1.3, radius * 3.5, 48),
+            new THREE.RingGeometry(radius * 1.3, radius * 3.8, 48),
             new THREE.MeshBasicMaterial({ color: 0xff4500, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
         );
         disk2.rotation.x = Math.PI / 2.3 + 0.25;
@@ -193,11 +193,34 @@ export function createCelestialFactory(scene, interactiveObjects) {
 
     // Initialize the complete Solar System
     function initSolarSystem() {
+        // Sun at (0, 0, 0)
         const sunMat = new THREE.MeshBasicMaterial({ map: buatTeksturBintang('#ffdd33', '#fff5b0', 512, 256) });
         const sun = new THREE.Mesh(new THREE.SphereGeometry(7, 48, 48), sunMat);
         registerInteractive(sun, "Matahari");
         scene.add(sun);
         rotatingMeshes.push({ mesh: sun, speed: 0.001 });
+
+        // Marker for Solar System location in Milky Way Orion Spur
+        const locationMarker = new THREE.Mesh(
+            new THREE.RingGeometry(32, 38, 48),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+        );
+        locationMarker.rotation.x = Math.PI / 2;
+        registerInteractive(locationMarker, "Lokasi Tata Surya Kita", {
+            nama: "Lokasi Tata Surya Kita",
+            kategori: "Lokasi Galaksi",
+            tipe: "Lengan/Taji Orion (Bima Sakti)",
+            desc: "Menandai posisi sebenarnya Matahari dan Tata Surya kita di dalam cakram Galaksi Bima Sakti: kita berada di dalam piringan bintang galaksi di kawasan Lengan Orion (Orion Arm/Spur), sekitar 26.000 tahun cahaya dari lubang hitam pusat Sagittarius A*.",
+            fakta: "Satu kali orbit penuh mengelilingi pusat Bima Sakti (Tahun Kosmik) memakan waktu ≈225–250 juta tahun. Sejak terbentuk 4,6 miliar tahun lalu, Tata Surya kita baru menyelesaikan sekitar 18–20 kali putaran galaksi.",
+            data: {
+                "Jarak ke Pusat Bima Sakti": "≈26.000 tahun cahaya (8.000 parsec)",
+                "Lokasi di Cakram": "Lengan Orion (antara Lengan Sagitarius & Perseus)",
+                "Kecepatan Orbit Galaksi": "≈220–240 km/detik",
+                "Periode Orbit Galaksi": "≈230 juta tahun"
+            },
+            sumber: "NASA / ESA Gaia Mission DR3"
+        });
+        scene.add(locationMarker);
 
         // Inner planets
         const merc = buildPlanet("Merkurius", 0.5, new THREE.MeshStandardMaterial({ map: buatTeksturBerbatu('#9a9a9a', 35) }), 11, 0.02 * kF);
@@ -253,7 +276,7 @@ export function createCelestialFactory(scene, interactiveObjects) {
         buildDeepSpaceProbe("Voyager 1", new THREE.Vector3(-125, 60, -105), 2.0);
         buildDeepSpaceProbe("Voyager 2", new THREE.Vector3(-95, -70, 118), 1.9);
 
-        // Neighboring star systems
+        // Neighboring star systems in Orion Arm
         const alphaGroup = new THREE.Group();
         alphaGroup.position.set(450, 30, 200);
         scene.add(alphaGroup);
@@ -298,7 +321,9 @@ export function createCelestialFactory(scene, interactiveObjects) {
 
         // Pulsars & Black Holes
         buildPulsar("Pulsar Kepiting (PSR B0531+21)", new THREE.Vector3(-900, 150, -600));
-        buildBlackHole("Sagittarius A*", new THREE.Vector3(0, 0, -15000), 2.5);
+
+        // Sagittarius A* at Galactic Center: (0, 0, -2600)
+        buildBlackHole("Sagittarius A*", new THREE.Vector3(0, 0, -2600), 3.5);
 
         return { sun, earth, mars, jup, sat };
     }
