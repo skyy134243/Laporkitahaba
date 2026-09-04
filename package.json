@@ -1,0 +1,23 @@
+{
+  "name": "cosmic-galaxy-simulator",
+  "version": "1.0.0",
+  "description": "Simulasi 3D Kosmik Tata Surya dan 49 Galaksi di Lingkungan Bima Sakti Berbasis Data NASA",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Static build ready for Vercel & Antigravity'"
+  },
+  "keywords": [
+    "astronomy",
+    "threejs",
+    "nasa",
+    "galaxies",
+    "local-group",
+    "milky-way",
+    "andromeda",
+    "triangulum",
+    "space-simulation"
+  ],
+  "author": "Rifaldhi Astra & Antigravity",
+  "license": "MIT"
+}
